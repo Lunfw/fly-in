@@ -4,6 +4,7 @@ MAKEFLAGS	+= --no-print-directory
 VENV	= .venv
 NORM	= $(VENV)/bin/flake8 && $(VENV)/bin/mypy .
 RED	= \033[1;31m
+BOLD	= \033[1m
 GREEN	= \033[1;32m
 CYAN	= \033[1;36m
 RESET	= \033[0m
@@ -31,8 +32,10 @@ run:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
 		fi
-	@echo "\0"
-	$(PY) -m src.main
+	@echo "$(BOLD)$(PY) -m src.main$(RESET)"; \
+	sleep 0.5
+	clear
+	@$(PY) -m src.main
 
 lint:
 	@if [ ! -d $(VENV) ]; then \
