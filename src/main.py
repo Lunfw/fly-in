@@ -1,4 +1,4 @@
-from sys import exit
+from sys import exit, stderr
 from pydantic import BaseModel, Field
 from src.colors import Colors
 
@@ -14,7 +14,7 @@ class InputErrors(GeneralErrors):
 class SimulationManager(BaseModel):
     '''
         Simulation Manager:
-            This will initiate a parser for the drones.
+            ->  This will initiate a parser for the drones.
     '''
     nb_drones: int = Field(ge=1, default=5)
     start_hub: tuple = Field(default=(0, 0))
@@ -22,6 +22,9 @@ class SimulationManager(BaseModel):
 
 
 def sim_lib() -> SimulationManager:
+    '''
+        Library for inputs and such.
+    '''
     return (SimulationManager(
         nb_drones=input("nb_drones: "),
         start_hub=input("start_hub: "),
@@ -31,8 +34,16 @@ def sim_lib() -> SimulationManager:
 
 
 def main():
-    simulation = sim_lib()
-    exit(0)
+    '''
+        Small main program.
+    '''
+    try:
+        simulation = sim_lib()
+    except ValidationError as ve:
+        print(f'Caught: {ve[0]['msg']}', stderr) 
+        exit(1)
+    finally:
+        exit(0)
 
 
 if (__name__ == '__main__'):

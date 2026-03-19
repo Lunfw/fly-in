@@ -1,7 +1,7 @@
-PY	= python3
 MAKEFLAGS	+= --no-print-directory
 .DEFAULT_GOAL	:= help
 VENV	= .venv
+PY	= python3
 NORM	= $(VENV)/bin/flake8 && $(VENV)/bin/mypy .
 RED	= \033[1;31m
 BOLD	= \033[1m
@@ -13,6 +13,7 @@ install:
 	@if [ ! -d $(VENV) ]; then \
 		$(PY) -m venv $(VENV); \
 		$(VENV)/bin/pip install -r requirements.txt -q; \
+		chmod +x $(VENV)/bin/activate; \
 	else \
 		echo "#	$(RED)$(VENV) exists.$(RESET)"; \
 		make help; \
@@ -31,15 +32,18 @@ help:
 run:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
-		fi
-	@echo "$(BOLD)$(PY) -m src.main$(RESET)"; \
-	sleep 0.5
-	clear
-	@$(PY) -m src.main
+		echo "$(BOLD)run $(VENV)/bin/activate first.$(RESET)"; \
+		exit; \
+	fi; \
+	echo "$(BOLD)$(VENV)/bin/$(PY) -m src.main$(RESET)"; \
+	sleep 0.5; \
+	clear; \
+	$(VENV)/bin/$(PY) -m src.main
 
 lint:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
+	fi
 	$(NORM)
 
 lint-strict:
