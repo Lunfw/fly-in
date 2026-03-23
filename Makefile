@@ -14,9 +14,6 @@ install:
 		$(PY) -m venv $(VENV); \
 		$(VENV)/bin/pip install -r requirements.txt -q; \
 		chmod +x $(VENV)/bin/activate; \
-		echo ''>>~/.config/pudb/pudb.cfg; \
-		echo '[ui]'>>~/.config/pudb/pudb.cfg; \
-		echo 'theme = monokai'>>~/.config/pudb/pudb.cfg; \
 	else \
 		echo "#	$(RED)$(VENV) exists.$(RESET)"; \
 		make help; \
@@ -50,8 +47,7 @@ debug:
 		exit; \
 	fi; \
 	echo "$(BOLD)$(VENV)/bin/$(PY) -m pdub src/main.py$(RESET)"; \
-	echo "$(CYAN)Note:$(BOLD) PUDB's theme was defaulted to Monokai.$(RESET)"; \
-	echo "$(BOLD)You can change its theme by pressing CTRL + P in the debugger."; \
+	echo "$(BOLD)You can change the theme by pressing CTRL + P in the debugger."; \
 	sleep 1; \
 	clear; \
 	$(VENV)/bin/$(PY) -m pudb 'src/main.py' 2>/dev/null
