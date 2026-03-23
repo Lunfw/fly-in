@@ -41,7 +41,7 @@ run:
 	$(VENV)/bin/$(PY) -m src.main
 
 debug:
-	@if [ ! -d $(VENV) ]; then \
+	@if [ ! -d '$(VENV)' ]; then \
 		make install; \
 		echo "$(BOLD)run $(VENV)/bin/activate first.$(RESET)"; \
 		exit; \
@@ -56,11 +56,11 @@ debug:
 	$(VENV)/bin/$(PY) -m pudb 'src/main.py' 2>/dev/null
 
 lint:
-	@if [ ! -d $(VENV) ]; then \
+	@if [ ! -d '$(VENV)' ]; then \
 		make install; \
 	fi; \
-	for DIR in (ls -a */); do \
-		if [ $(DIR) != '$(VENV)' ]; then \
+	for DIR in '$(pwd)/*'; do \
+		if [ '$(DIR)' != '$(VENV)' ]; then \
 			$(VENV)/bin/flake8 $(DIR); \
 			$(VENV)/bin/mypy $(DIR); \
 		fi; \
@@ -71,7 +71,7 @@ lint-strict:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
 	fi; \
-	for DIR in (ls -a */); do \
+	for DIR in '$(pwd)/*; do \
 		if [ $(DIR) != '$(VENV)' ]; then \
 			$(VENV)/bin/flake8 $(DIR) --select=F; \
 			$(VENV)/bin/mypy $(DIR) --strict; \
