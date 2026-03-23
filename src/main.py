@@ -21,30 +21,30 @@ class SimulationManager(BaseModel):
     end_hub: tuple = Field(default=(5, 5))
 
 
-def sim_lib() -> SimulationManager:
-    '''
+class Main:
+    def sim_lib(self) -> SimulationManager:
+        '''
         Library for inputs and such.
     '''
-    return (SimulationManager(
-        nb_drones=input("nb_drones: "),
-        start_hub=input("start_hub: "),
-        end_hub=input("end_hub: ")
-        )
-    )
+        return (SimulationManager(
+            nb_drones=input("nb_drones: "),
+            start_hub=input("start_hub: "),
+            end_hub=input("end_hub: ")
+            )
+            )
 
-
-def main():
-    '''
-        Small main program.
-    '''
-    try:
-        simulation = sim_lib()
-    except ValidationError as ve:
-        print(f'Caught: {ve[0]['msg']}', stderr) 
-        exit(1)
-    finally:
-        exit(0)
+    def main(self):
+        '''
+            Small main program.
+        '''
+        try:
+            simulation = sim_lib()
+        except ValidationError as ve:
+            print(f'Caught: {ve[0]['msg']}', stderr) 
+            exit(1)
+        finally:
+            exit(0)
 
 
 if (__name__ == '__main__'):
-    main()
+    Main().main()

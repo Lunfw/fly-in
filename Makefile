@@ -40,6 +40,16 @@ run:
 	clear; \
 	$(VENV)/bin/$(PY) -m src.main
 
+debug:
+	@if [ ! -d $(VENV) ]; then \
+		make install; \
+		echo "$(BOLD)run $(VENV)/bin/activate first.$(RESET)"; \
+		exit; \
+	fi; \
+	echo "$(BOLD)$(VENV)/bin/$(PY) -m pdub src/main.py$(RESET)"; \
+	sleep 0.5; \
+	$(VENV)/bin/$(PY) -m pdb 'src/main.py'
+
 lint:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
