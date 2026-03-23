@@ -2,7 +2,6 @@ MAKEFLAGS	+= --no-print-directory
 .DEFAULT_GOAL	:= help
 VENV	= .venv
 PY	= python3
-NORM	= $(VENV)/bin/flake8 && $(VENV)/bin/mypy .
 RED	= \033[1;31m
 BOLD	= \033[1m
 GREEN	= \033[1;32m
@@ -51,7 +50,6 @@ debug:
 	echo "$(BOLD)If it is your first time running PUDB, it will be that ugly blue theme.$(RESET)"; \
 	echo "$(BOLD)You can change the theme by pressing CTRL + P in the debugger.$(RESET)"; \
 	echo "$(GREY)Tip: Monokai/Mono & Dark Vim support your terminal's opacity and default themselves to your original terminal theme.$(RESET)"; \
-	echo "1">.notice; \
 	echo "$(BOLD)$(VENV)/bin/$(PY) -m pdub src/main.py$(RESET)"; \
 	sleep 1; \
 	clear; \
@@ -60,16 +58,32 @@ debug:
 lint:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
-	fi
-	$(NORM)
+	fi; \
+	for DIR in (ls -a */); do \
+		if [ $(DIR) != '$(VENV)' ]; then \
+			$(VENV)/bin/flake8 $(DIR); \
+			$(VENV)/bin/mypy $(DIR); \
+		fi; \
+		continue; \
+	done
 
 lint-strict:
-	make lint --strict
+	@if [ ! -d $(VENV) ]; then \
+		make install; \
+	fi; \
+	for DIR in (ls -a */); do \
+		if [ $(DIR) != '$(VENV)' ]; then \
+			$(VENV)/bin/flake8 $(DIR) --select=F; \
+			$(VENV)/bin/mypy $(DIR) --strict; \
+		fi; \
+		continue; \
+	done
 
 clean:
 	rm -rf $(VENV)
-	rm -rf **/__pycache__
-	rm -rf **/*.pyc
-	rm -rf **/*.pyo
+	find . -name "*.pyc" -exec rm -f {} \;
+	find . -name "*.pyo" -exec rm -f {} \;
+	find . -type d -name "__pycache__" -exec rm -rf {} \;
+	find . -type d -name ".mypy_cache" -exec rm -rf {} \;
 
 .PHONY: help run install clean lint lint-strict
