@@ -15,8 +15,6 @@ install:
 		$(PY) -m venv $(VENV); \
 		$(VENV)/bin/pip install -r requirements.txt -q; \
 		chmod +x $(VENV)/bin/activate; \
-		touch .notice; \
-		echo "0">.notice; \
 	else \
 		echo "#	$(RED)$(VENV) exists.$(RESET)"; \
 		make help; \
@@ -49,13 +47,11 @@ debug:
 		echo "$(BOLD)run $(VENV)/bin/activate first.$(RESET)"; \
 		exit; \
 	fi; \
-	if [ "$(cat ".notice")" = "0" ]; then \
-		echo "$(CYAN)Note:$(BOLD) PUDB defaults itself to your initial ~/.config/pudb/pudb.cfg theme."; \
-		echo "$(BOLD)If it is your first time running PUDB, it will be that ugly blue theme.$(RESET)"; \
-		echo "$(BOLD)You can change the theme by pressing CTRL + P in the debugger.$(RESET)"; \
-		echo "$(GREY)Tip: Monokai/Mono & Dark Vim support your terminal's opacity and default themselves to your original terminal theme.$(RESET)"; \
-		echo "1">.notice; \
-	fi; \
+	echo "$(CYAN)Note:$(BOLD) PUDB defaults itself to your initial ~/.config/pudb/pudb.cfg theme."; \
+	echo "$(BOLD)If it is your first time running PUDB, it will be that ugly blue theme.$(RESET)"; \
+	echo "$(BOLD)You can change the theme by pressing CTRL + P in the debugger.$(RESET)"; \
+	echo "$(GREY)Tip: Monokai/Mono & Dark Vim support your terminal's opacity and default themselves to your original terminal theme.$(RESET)"; \
+	echo "1">.notice; \
 	echo "$(BOLD)$(VENV)/bin/$(PY) -m pdub src/main.py$(RESET)"; \
 	sleep 1; \
 	clear; \
