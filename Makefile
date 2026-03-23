@@ -49,7 +49,7 @@ debug:
 	echo "$(BOLD)$(VENV)/bin/$(PY) -m pdub src/main.py$(RESET)"; \
 	clear; \
 	sleep 0.5; \
-	$(VENV)/bin/$(PY) -m pudb 'src/main.py'
+	$(VENV)/bin/$(PY) -m pudb 'src/main.py' 2>/dev/null
 
 lint:
 	@if [ ! -d $(VENV) ]; then \
@@ -65,5 +65,6 @@ clean:
 	rm -rf **/__pycache__
 	rm -rf **/*.pyc
 	rm -rf **/*.pyo
+	@rm -rf ~/.config/pudb/
 
 .PHONY: help run install clean lint lint-strict
