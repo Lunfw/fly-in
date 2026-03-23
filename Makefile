@@ -49,7 +49,7 @@ debug:
 	echo "$(BOLD)$(VENV)/bin/$(PY) -m pdub src/main.py$(RESET)"; \
 	clear; \
 	sleep 0.5; \
-	$(VENV)/bin/$(PY) -m pdub 'src/main.py'
+	$(VENV)/bin/$(PY) -m pudb 'src/main.py'
 
 lint:
 	@if [ ! -d $(VENV) ]; then \
