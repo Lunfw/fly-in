@@ -59,25 +59,15 @@ lint:
 	@if [ ! -d '$(VENV)' ]; then \
 		make install; \
 	fi; \
-	for DIR in '$(pwd)/*'; do \
-		if [ '$(DIR)' != '$(VENV)' ]; then \
-			$(VENV)/bin/flake8 $(DIR); \
-			$(VENV)/bin/mypy $(DIR); \
-		fi; \
-		continue; \
-	done
+	$(VENV)/bin/flake8 'src'; \
+	$(VENV)/bin/mypy 'src'; \
 
 lint-strict:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
 	fi; \
-	for DIR in '$(pwd)/*; do \
-		if [ $(DIR) != '$(VENV)' ]; then \
-			$(VENV)/bin/flake8 $(DIR) --select=F; \
-			$(VENV)/bin/mypy $(DIR) --strict; \
-		fi; \
-		continue; \
-	done
+	$(VENV)/bin/flake8 'src' --select=F; \
+	$(VENV)/bin/mypy 'src' --strict; \
 
 clean:
 	rm -rf $(VENV)
