@@ -71,7 +71,5 @@ clean:
 	rm -rf **/__pycache__
 	rm -rf **/*.pyc
 	rm -rf **/*.pyo
-	@rm -rf ~/.config/pudb/
-	@rm -rf .notice
 
 .PHONY: help run install clean lint lint-strict
