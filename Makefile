@@ -51,7 +51,7 @@ debug:
 	echo "$(CYAN)Note:$(BOLD) PUDB defaults itself to your initial ~/.config/pudb/pudb.cfg theme."; \
 	echo "$(BOLD)If it is your first time running PUDB, it will be that ugly blue theme.$(RESET)"; \
 	echo "$(BOLD)You can change the theme by pressing CTRL + P in the debugger.$(RESET)"; \
-	echo "$(GREY)Tip: Monokai and Dark Vim support your terminal's opacity and default themselves to your original terminal theme.$(RESET)"; \
+	echo "$(GREY)Tip: Monokai/Mono & Dark Vim support your terminal's opacity and default themselves to your original terminal theme.$(RESET)"; \
 	sleep 1; \
 	clear; \
 	$(VENV)/bin/$(PY) -m pudb 'src/main.py' 2>/dev/null
