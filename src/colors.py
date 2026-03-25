@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class Colors(BaseModel, Italic):
+class Colors(BaseModel):
     '''
         A small library for color codes and such.
     '''

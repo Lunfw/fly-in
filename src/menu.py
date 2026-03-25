@@ -21,5 +21,4 @@ class Menu(BaseModel):
                     '',
                     'omg get_next_line reference!!',
                 )
-        body: tuple = (
         self.centered(head)
