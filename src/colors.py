@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class Colors(BaseModel):
+class Colors(BaseModel, Italic):
     '''
         A small library for color codes and such.
     '''
@@ -13,4 +13,5 @@ class Colors(BaseModel):
     PURPLE: str = Field(default='\033[1;35m')
     CYAN: str = Field(default='\033[1;36m')
     WHITE: str = Field(default='\033[1;37m')
+    GREY: str = Field(default='\033[1;90m')
     RESET: str = Field(default='\033[0m')

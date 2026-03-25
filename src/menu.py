@@ -12,13 +12,14 @@ class Menu(BaseModel):
         for line in text:
             print(line.center(width))
 
-    def display(self):
+    def display(self) -> None:
         print(self.colors.CYAN)
-        center = (
+        head: tuple = (
                     "Welcome!",
                     "This is a drone simulation program.",
                     self.colors.WHITE,
                     '',
-                    'omg get_next_line reference!!'
+                    'omg get_next_line reference!!',
                 )
-        self.centered(center)
+        body: tuple = (
+        self.centered(head)
