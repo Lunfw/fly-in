@@ -20,14 +20,14 @@ class Format(BaseModel):
         temp: List = []
         if (type(text) is str):
             return ('[ ] -   ' + text)
-        max_len: int = len(line[0])
+        max_len: int = len(text[0])
         for line in text:
             if (max_len < len(line)):
                 max_len = len(line)
         for line in text:
             while (len(line) < max_len):
-                line = ' ' + line
-            temp.append('[ ] - ' + line)
+                line += ' '
+            temp.append('[ ]    ->  ' + line)
         return (temp)
 
 
