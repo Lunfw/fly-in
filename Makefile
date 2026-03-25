@@ -68,9 +68,9 @@ lint-strict:
 
 clean:
 	rm -rf $(VENV)
-	find . -name "*.pyc" -exec rm -f {} \;
-	find . -name "*.pyo" -exec rm -f {} \;
-	find . -type d -name "__pycache__" -exec rm -rf {} \;
-	@find . -type d -name ".mypy_cache" 2>>/dev/null -exec rm -rf {} \;
+	find . -name "*.pyc" -exec rm -f {} \; 2>/dev/null || true
+	find . -name "*.pyo" -exec rm -f {} \; 2>/dev/null || true
+	find . -type d -name "__pycache__" -exec rm -rf {} \; 2>/dev/null || true
+	@find . -type d -name ".mypy_cache" -exec rm -rf {} \; 2>/dev/null || true
 
 .PHONY: help run install clean lint lint-strict

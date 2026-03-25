@@ -15,7 +15,10 @@ class Menu(BaseModel):
     def display(self):
         print(self.colors.CYAN)
         center = (
-                    "Welcome!", 
-                    "This is a drone simulation program."
+                    "Welcome!",
+                    "This is a drone simulation program.",
+                    self.colors.WHITE,
+                    '',
+                    'omg get_next_line reference!!'
                 )
         self.centered(center)
