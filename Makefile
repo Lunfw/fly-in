@@ -21,13 +21,13 @@ install:
 
 help:
 	@echo "\nUsage:"; \
-	echo "$(CYAN)make install$(RESET)	-	installs .venv + requirements.txt"; \
-	echo "$(CYAN)make run$(RESET)	-	runs the program"; \
-	echo "$(CYAN)make debug$(RESET)	-	runs pdb on the command line"; \
-	echo "$(CYAN)make clean$(RESET)	-	deletes cache, temp files, eventually the venv is there is one"; \
-	echo "$(CYAN)make lint$(RESET)	-	runs flake8 & mypy"; \
-	echo "$(CYAN)make lint-strict$(RESET)	- runs make lint, in strict mode"; \
-	echo "$(CYAN)make help/make$(RESET)	-	this screen"
+	echo "$(CYAN)make install$(RESET)		-	installs .venv + requirements.txt"; \
+	echo "$(CYAN)make run$(RESET)		-	runs the program"; \
+	echo "$(CYAN)make debug$(RESET)		-	runs pdb on the command line"; \
+	echo "$(CYAN)make clean$(RESET)		-	deletes cache, temp files, eventually the venv is there is one"; \
+	echo "$(CYAN)make lint$(RESET)		-	runs flake8 & mypy"; \
+	echo "$(CYAN)make lint-strict$(RESET)	-	runs make lint, in strict mode"; \
+	echo "$(CYAN)make help/make$(RESET)		-	this screen"
 
 run:
 	@if [ ! -d $(VENV) ]; then \
@@ -74,6 +74,6 @@ clean:
 	find . -name "*.pyc" -exec rm -f {} \;
 	find . -name "*.pyo" -exec rm -f {} \;
 	find . -type d -name "__pycache__" -exec rm -rf {} \;
-	find . -type d -name ".mypy_cache" -exec rm -rf {} \;
+	@find . -type d -name ".mypy_cache" 2>>/dev/null -exec rm -rf {} \;
 
 .PHONY: help run install clean lint lint-strict
