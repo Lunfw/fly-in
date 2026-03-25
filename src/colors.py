@@ -1,20 +1,34 @@
 from pydantic import BaseModel, Field
 from shutil import get_terminal_size
 from sys import stdout
-from typing import Any, IO
+from typing import Any, IO, List
 
 
 class Format(BaseModel):
     '''
         Small lib for text formatting.
     '''
-    def centered(self, text: (tuple | str), fd: IO = stdout) -> None:
+    def centered(self, text: (List | str), fd: IO = stdout) -> None:
         width = get_terminal_size().columns
         if (type(text) is str):
             print(text.center(width), file=fd)
             return (None)
         for line in text:
             print(line.center(width), file=fd)
+
+    def listing(self, text: (List | str), fd: IO = stdout) -> str or List:
+        temp: List = []
+        if (type(text) is str):
+            return ('[ ] -   ' + text)
+        max_len: int = len(line[0])
+        for line in text:
+            if (max_len < len(line)):
+                max_len = len(line)
+        for line in text:
+            while (len(line) < max_len):
+                line = ' ' + line
+            temp.append('[ ] - ' + line)
+        return (temp)
 
 
 class Colors(BaseModel):

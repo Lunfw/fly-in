@@ -2,7 +2,7 @@ from src.colors import Colors, Format
 from pydantic import BaseModel, Field
 from os import listdir
 from sys import stderr
-from typing import Generator
+from typing import Generator, List
 
 
 class Maps(BaseModel):
@@ -31,12 +31,13 @@ class Menu(BaseModel):
     maps: Maps = Field(default=Maps())
 
     def display(self) -> None:
-        head: tuple = (
+        head: List = [
                     self.colors.CYAN,
                     'Welcome!',
                     'This is a drone simulation program.',
                     self.colors.WHITE,
-                    'omg get_next_line reference!!',
-                )
+                    'omg get_next_line reference!!\n',
+                    ]
         self.form.centered(head)
-        body: tuple = tuple(maps for maps in self.maps.get_maps())
+        body: List = list(maps for maps in self.maps.get_maps())
+        self.form.centered(self.form.listing(body))
