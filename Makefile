@@ -70,7 +70,7 @@ clean:
 	rm -rf $(VENV)
 	find . -name "*.pyc" -exec rm -f {} \;
 	find . -name "*.pyo" -exec rm -f {} \;
-	@find . -type d -name "__pycache__" 2>>/dev/null -exec rm -rf {} \;
+	find . -type d -name "__pycache__" -exec rm -rf {} \;
 	@find . -type d -name ".mypy_cache" 2>>/dev/null -exec rm -rf {} \;
 
 .PHONY: help run install clean lint lint-strict

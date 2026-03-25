@@ -1,15 +1,7 @@
-from sys import exit, stderr, argv
+from sys import exit, stderr
 from pydantic import BaseModel, Field, ValidationError
-from src.colors import Colors
+from src.menu import Menu
 from typing import IO
-
-
-class GeneralErrors(Exception):
-    pass
-
-
-class InputErrors(GeneralErrors):
-    pass
 
 
 class SimulationManager(BaseModel):
@@ -23,19 +15,20 @@ class SimulationManager(BaseModel):
 
 
 class Main(BaseModel):
-    def sim_lib(self, file: IO[str]) -> SimulationManager:
+    def sim_lib(self) -> SimulationManager:
         '''
         Library for inputs and such.
     '''
-        from src.parser import Parser
-        return Parser().parse_args(file)
+        return parser.parse_args(Menu())
 
-    def main(self, file: IO):
+    def main(self):
         '''
             Small main program.
         '''
         try:
-            simulation = self.sim_lib(file)
+            menu = Menu()
+            menu.display()
+            #simulation = self.sim_lib()
         except ValidationError as ve:
             print(f'Caught: {ve[0]['msg']}', file=stderr)
             exit(1)
@@ -44,7 +37,4 @@ class Main(BaseModel):
 
 
 if (__name__ == '__main__'):
-    if (len(argv) != 2):
-        print('Usage: python3 main.py <file>', file=stderr)
-        exit(1)
-    Main().main(argv[1])
+    Main().main()
