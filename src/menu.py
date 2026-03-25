@@ -1,40 +1,42 @@
-from src.colors import Colors
+from src.colors import Colors, Format
 from pydantic import BaseModel, Field
-from shutil import get_terminal_size
-from typing import List
 from os import listdir
 from sys import stderr
+from typing import Generator
 
 
 class Maps(BaseModel):
-    def get_maps(self) -> None:
+    colors: Colors = Field(default=Colors())
+    form: Format = Field(default=Format())
+
+    def get_maps(self) -> Generator:
         try:
             for entity in listdir('maps'):
                 yield entity
-        except DirectoryNotFoundError:
-            print('No maps found', file=stderr)
+        except FileNotFoundError:
+            print(self.colors.RED)
+            self.form.centered('No maps found.', stderr)
+            print(self.colors.RESET)
+            for files in listdir('.'):
+                if ('maps' in files):
+                    self.form.centered('Maybe if you unarchived this:')
+                    self.form.centered(files)
+                    break
             exit(1)
 
 
 class Menu(BaseModel):
     colors: Colors = Field(default=Colors())
+    form: Format = Field(default=Format())
     maps: Maps = Field(default=Maps())
 
-    def centered(self, text: tuple):
-        width = get_terminal_size().columns
-        for line in text:
-            print(line.center(width))
-
     def display(self) -> None:
-        print(self.colors.CYAN)
         head: tuple = (
+                    self.colors.CYAN,
                     'Welcome!',
                     'This is a drone simulation program.',
                     self.colors.WHITE,
-                    '',
                     'omg get_next_line reference!!',
-                    self.colors.RESET
                 )
-        self.centered(head)
+        self.form.centered(head)
         body: tuple = tuple(maps for maps in self.maps.get_maps())
-        self.centered(body)

@@ -1,7 +1,6 @@
 from sys import exit, stderr
 from pydantic import BaseModel, Field, ValidationError
 from src.menu import Menu
-from typing import IO
 
 
 class SimulationManager(BaseModel):
@@ -15,20 +14,21 @@ class SimulationManager(BaseModel):
 
 
 class Main(BaseModel):
+    """
     def sim_lib(self) -> SimulationManager:
         '''
-        Library for inputs and such.
-    '''
+            Library for inputs and such.
+        '''
         return parser.parse_args(Menu())
-
+    """
     def main(self):
         '''
-            Small main program.
+             Small main program.
         '''
         try:
             menu = Menu()
             menu.display()
-            #simulation = self.sim_lib()
+            # simulation = self.sim_lib()
         except ValidationError as ve:
             print(f'Caught: {ve[0]['msg']}', file=stderr)
             exit(1)

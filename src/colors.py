@@ -1,4 +1,20 @@
 from pydantic import BaseModel, Field
+from shutil import get_terminal_size
+from sys import stdout
+from typing import Any, IO
+
+
+class Format(BaseModel):
+    '''
+        Small lib for text formatting.
+    '''
+    def centered(self, text: (tuple | str), fd: IO = stdout) -> None:
+        width = get_terminal_size().columns
+        if (type(text) is str):
+            print(text.center(width), file=fd)
+            return (None)
+        for line in text:
+            print(line.center(width), file=fd)
 
 
 class Colors(BaseModel):
