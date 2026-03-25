@@ -21,7 +21,7 @@ class SimulationManager(BaseModel):
     end_hub: tuple = Field(default=(5, 5))
 
 
-class Main:
+class Main(BaseModel):
     def sim_lib(self) -> SimulationManager:
         '''
         Library for inputs and such.
@@ -31,16 +31,16 @@ class Main:
             start_hub=input("start_hub: "),
             end_hub=input("end_hub: ")
             )
-            )
+        )
 
     def main(self):
         '''
             Small main program.
         '''
         try:
-            simulation = sim_lib()
+            simulation = self.sim_lib()
         except ValidationError as ve:
-            print(f'Caught: {ve[0]['msg']}', stderr) 
+            print(f'Caught: {ve[0]['msg']}', stderr)
             exit(1)
         finally:
             exit(0)
