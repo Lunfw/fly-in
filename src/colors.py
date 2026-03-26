@@ -11,15 +11,15 @@ class Format(BaseModel):
     def centered(self, text: (List | str), fd: IO = stdout) -> None:
         width = get_terminal_size().columns
         if (type(text) is str):
-            print(text.center(width), file=fd)
+            print(text.center(width), file=fd, flush=True)
             return (None)
         for line in text:
-            print(line.center(width), file=fd)
+            print(line.center(width), file=fd, flush=True)
 
     def listing(self, text: (List | str), fd: IO = stdout) -> str or List:
         temp: List = []
         if (type(text) is str):
-            return ('[ ] -   ' + text)
+            return ('[ ]    -> ' + text)
         max_len: int = len(text[0])
         for line in text:
             if (max_len < len(line)):

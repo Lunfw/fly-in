@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from os import listdir
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from tty import setraw
-from sys import stderr, stdin
+from sys import stderr, stdin, stdout
 from typing import Generator, List
 
 
@@ -31,6 +31,7 @@ class Menu(BaseModel):
     colors: Colors = Field(default=Colors())
     form: Format = Field(default=Format())
     maps: Maps = Field(default=Maps())
+    first_draw: bool = Field(default=True)
 
     def display(self) -> None:
         head: List = [
@@ -42,10 +43,11 @@ class Menu(BaseModel):
                     ]
         self.form.centered(head)
         body: List = list(maps for maps in self.maps.get_maps())
-        self.form.centered(self.form.listing(body))
-        navigate.first_draw = True
+        self.first_draw = True
+        selected = 0
+        self.navigate(body, selected)
         while (True):
-            key = get_key()
+            key = self.get_key()
 
             if (key == '\x1b[A'):
                 selected = (selected - 1) % len(body)
@@ -53,7 +55,7 @@ class Menu(BaseModel):
                 selected = (selected + 1) % len(body)
             elif (key == '\x03'):
                 break
-            navigate(body, selected)
+            self.navigate(body, selected)
 
 
     def get_key(self):
@@ -68,15 +70,18 @@ class Menu(BaseModel):
         finally:
             tcsetattr(fd, TCSADRAIN, old)
 
-    def navigate(items, selection):
-        if (navigate.first_draw):
-            navigate.first_draw = False
+    def navigate(self, items, selection):
+        temp: List[str] = []
+        if (self.first_draw):
+            self.first_draw = False
         else:
-            stdout.write('\x1b[{len(items)}A')
+            stdout.write(f'\x1b[{len(items)}A')
+            stdout.clear('\x1b[J')
 
         for i, item in enumerate(items):
-            if (i == selected):
+            if (i == selection):
                 marker = 'x'
             else:
                 marker = ' '
-            self.form.centered(self.form.listing(item))
+            temp.append(item)
+        self.form.centered(self.form.listing(temp))
