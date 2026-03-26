@@ -72,6 +72,8 @@ class Menu(BaseModel):
                 body = list(self.maps.get_map(body[selected]))
                 if (body[selected] == '..'):
                     body = list(maps for maps in self.maps.get_diffs())
+                if (selected == 0):
+                    body = list(maps for maps in self.maps.get_map(body[0]))
             elif (key == '\x03'):
                 break
             self.navigate(body, selected)
@@ -122,5 +124,5 @@ class Menu(BaseModel):
         self.form.centered(temp)
         print(self.colors.RESET)
 
-        self.nav_lines = len(head) + (len(items) * 2 + 3)
+        self.nav_lines = len(head) + (len(items) * 2 + 5)
         self.form.draw_margin()

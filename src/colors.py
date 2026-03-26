@@ -4,7 +4,24 @@ from sys import stdout
 from typing import IO, List
 
 
+class Colors(BaseModel):
+    '''
+        A small library for color codes and such.
+    '''
+    BLACK: str = Field(default='\033[1;30m')
+    RED: str = Field(default='\033[1;31m')
+    GREEN: str = Field(default='\033[1;32m')
+    YELLOW: str = Field(default='\033[1;33m')
+    BLUE: str = Field(default='\033[1;34m')
+    PURPLE: str = Field(default='\033[1;35m')
+    CYAN: str = Field(default='\033[1;36m')
+    WHITE: str = Field(default='\033[1;37m')
+    GREY: str = Field(default='\033[1;90m')
+    RESET: str = Field(default='\033[0m')
+
+
 class Format(BaseModel):
+    colors: Colors = Field(default=Colors())
     '''
         Small lib for text formatting.
     '''
@@ -43,24 +60,8 @@ class Format(BaseModel):
 
     def draw_margin(self) -> None:
         width = get_terminal_size().columns
-        margin = '|< '
+        margin = self.colors.WHITE + '|< '
         for i in range(width - 6):
             margin += '='
-        margin += ' >|'
+        margin += ' >|' + self.colors.RESET
         self.centered(margin)
-
-
-class Colors(BaseModel):
-    '''
-        A small library for color codes and such.
-    '''
-    BLACK: str = Field(default='\033[1;30m')
-    RED: str = Field(default='\033[1;31m')
-    GREEN: str = Field(default='\033[1;32m')
-    YELLOW: str = Field(default='\033[1;33m')
-    BLUE: str = Field(default='\033[1;34m')
-    PURPLE: str = Field(default='\033[1;35m')
-    CYAN: str = Field(default='\033[1;36m')
-    WHITE: str = Field(default='\033[1;37m')
-    GREY: str = Field(default='\033[1;90m')
-    RESET: str = Field(default='\033[0m')
