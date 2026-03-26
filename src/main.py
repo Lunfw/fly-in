@@ -3,16 +3,6 @@ from pydantic import BaseModel, Field, ValidationError
 from src.menu import Menu
 
 
-class SimulationManager(BaseModel):
-    '''
-        Simulation Manager:
-            ->  This will initiate a parser for the drones.
-    '''
-    nb_drones: int = Field(ge=1, default=5)
-    start_hub: tuple = Field(default=(0, 0))
-    end_hub: tuple = Field(default=(5, 5))
-
-
 class Main(BaseModel):
     def main(self):
         '''
