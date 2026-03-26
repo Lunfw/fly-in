@@ -56,7 +56,7 @@ class Menu(BaseModel):
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
 
-    def display(self) -> None:
+    def display(self) -> str:
         body: List = list(maps for maps in self.maps.get_diffs())
         selected = 0
         self.navigate(body, selected)
@@ -68,7 +68,9 @@ class Menu(BaseModel):
             elif (key == '\x1b[B'):
                 selected = (selected + 1) % len(body)
             elif (body[selected] == '..' and key == '\r'):
-                    body = list(maps for maps in self.maps.get_diffs())
+                body = list(maps for maps in self.maps.get_diffs())
+            elif ('.txt' in body[selected] and key == '\r'):
+                pass
             elif (key == '\r'):
                 selected = selected % len(body)
                 body = list(self.maps.get_map(body[selected]))

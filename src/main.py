@@ -14,13 +14,6 @@ class SimulationManager(BaseModel):
 
 
 class Main(BaseModel):
-    """
-    def sim_lib(self) -> SimulationManager:
-        '''
-            Library for inputs and such.
-        '''
-        return parser.parse_args(Menu())
-    """
     def main(self):
         '''
              Small main program.
@@ -28,7 +21,6 @@ class Main(BaseModel):
         try:
             menu = Menu()
             menu.display()
-            # simulation = self.sim_lib()
         except ValidationError as ve:
             print(f'Caught: {ve[0]['msg']}', file=stderr)
             exit(1)
