@@ -82,13 +82,19 @@ class Menu(BaseModel):
                 selected = self.last_folder
             elif ('txt' in body[selected] and key == '\r'):
                 self.is_txt = True
+                self.sim.prompt(body[selected])
             elif (key == '\r'):
                 body = list(self.maps.get_map(body[selected]))
                 self.last_folder = selected
                 selected = 0
             elif (key == '\x03'):
                 break
-            self.navigate(body, selected)
+            if (not self.is_txt):
+                self.navigate(body, selected)
+
+    def reset(self) -> None:
+        self.first_draw = True
+        self.nav_lines = 0
 
     def get_key(self) -> str:
         fd = stdin.fileno()
@@ -136,6 +142,3 @@ class Menu(BaseModel):
 
         self.nav_lines = len(head) + (len(items) * 2 + 6)
         self.form.draw_margin()
-        if (self.is_txt):
-            self.sim.prompt(items[selected])
-            self.is_txt = False

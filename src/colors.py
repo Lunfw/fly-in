@@ -58,6 +58,14 @@ class Format(BaseModel):
                 temp.append(text[line])
         return (temp)
 
+    def putstr(self, text: (List[str] | str)) -> None:
+        temp: str = ''
+        if (type(text) is str):
+            print(text)
+            return
+        for word in text:
+            print(word)
+
     def draw_margin(self) -> None:
         width = get_terminal_size().columns
         margin = self.colors.WHITE + '|< '
