@@ -67,13 +67,11 @@ class Menu(BaseModel):
                 selected = (selected - 1) % len(body)
             elif (key == '\x1b[B'):
                 selected = (selected + 1) % len(body)
+            elif (body[selected] == '..' and key == '\r'):
+                    body = list(maps for maps in self.maps.get_diffs())
             elif (key == '\r'):
                 selected = selected % len(body)
                 body = list(self.maps.get_map(body[selected]))
-                if (body[selected] == '..'):
-                    body = list(maps for maps in self.maps.get_diffs())
-                if (selected == 0):
-                    body = list(maps for maps in self.maps.get_map(body[0]))
             elif (key == '\x03'):
                 break
             self.navigate(body, selected)
