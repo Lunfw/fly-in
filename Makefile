@@ -33,7 +33,6 @@ help:
 run:
 	@if [ ! -d $(VENV) ]; then \
 		make install; \
-		echo "$(BOLD)run $(VENV)/bin/activate first.$(RESET)"; \
 	fi; \
 	echo "$(BOLD)$(VENV)/bin/$(PY) -m src.main$(RESET)"; \
 	sleep 0.5; \

@@ -1,5 +1,5 @@
 from src.colors import Colors, Format
-from src.simulation import SimulationManager
+from src.simulation import SimulationDisplay
 from pydantic import BaseModel, Field
 from os import listdir, path
 from termios import tcgetattr, tcsetattr, TCSADRAIN
@@ -54,11 +54,12 @@ class Menu(BaseModel):
     colors: Colors = Field(default=Colors())
     form: Format = Field(default=Format())
     maps: Maps = Field(default=Maps())
-    sim: SimulationManager = Field(default=SimulationManager())
+    sim: SimulationDisplay = Field(default=SimulationDisplay())
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
     last_folder: int = Field(default=0)
     is_txt: bool = Field(default=False)
+    dirpath: str = Field(default='')
 
     def display(self) -> None:
         body: List = list(maps for maps in self.maps.get_diffs())
@@ -82,8 +83,9 @@ class Menu(BaseModel):
                 selected = self.last_folder
             elif ('txt' in body[selected] and key == '\r'):
                 self.is_txt = True
-                self.sim.prompt(body[selected])
+                self.sim.prompt(self.dirpath + '/' + body[selected])
             elif (key == '\r'):
+                self.dirpath = body[selected]
                 body = list(self.maps.get_map(body[selected]))
                 self.last_folder = selected
                 selected = 0
