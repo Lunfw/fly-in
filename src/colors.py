@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from shutil import get_terminal_size
 from sys import stdout
-from typing import Any, IO, List
+from typing import IO, List
 
 
 class Format(BaseModel):

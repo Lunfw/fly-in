@@ -48,6 +48,7 @@ class Maps(BaseModel):
             print(self.colors.RESET)
             exit(1)
 
+
 class Menu(BaseModel):
     colors: Colors = Field(default=Colors())
     form: Format = Field(default=Format())
@@ -113,7 +114,7 @@ class Menu(BaseModel):
         for i, item in enumerate(items):
             if (i == selection):
                 if (i == selection):
-                    marker = f'#'
+                    marker = '#'
                 else:
                     marker = ' '
                 padded: str = item.ljust(max_len)
