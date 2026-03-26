@@ -41,6 +41,14 @@ class Format(BaseModel):
                 temp.append(text[line])
         return (temp)
 
+    def draw_margin(self) -> None:
+        width = get_terminal_size().columns
+        margin = '|< '
+        for i in range(width - 6):
+            margin += '='
+        margin += ' >|'
+        self.centered(margin)
+
 
 class Colors(BaseModel):
     '''

@@ -24,12 +24,12 @@ class Maps(BaseModel):
         except FileNotFoundError:
             print(self.colors.RED)
             self.form.centered('No maps found.', stderr)
-            print(self.colors.RESET)
             for files in listdir('.'):
                 if ('maps' in files):
-                    self.form.centered('Maybe if you unarchived this:')
+                    self.form.centered('Did you forget to extract this?')
                     self.form.centered(files)
                     break
+            print(self.colors.RESET)
             exit(1)
 
     def get_map(self, folder: str) -> Generator:
@@ -100,7 +100,7 @@ class Menu(BaseModel):
             self.colors.CYAN,
             'Welcome!',
             'This is a drone simulation program.',
-            self.colors.WHITE,
+            self.colors.RESET,
             'omg get_next_line reference!!\n',
             ]
         self.form.centered(head)
@@ -123,3 +123,4 @@ class Menu(BaseModel):
         print(self.colors.RESET)
 
         self.nav_lines = len(head) + (len(items) * 2 + 3)
+        self.form.draw_margin()
