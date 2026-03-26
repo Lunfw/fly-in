@@ -16,10 +16,10 @@ class Format(BaseModel):
         for line in text:
             print(line.center(width), file=fd, flush=True)
 
-    def listing(self, text: (List | str), fd: IO = stdout) -> str or List:
+    def listing(self, text: (List | str), marker: str = ' ') -> str or List:
         temp: List = []
         if (type(text) is str):
-            return ('[ ]    -> ' + text)
+            return (f'[{marker}]    -> ' + text)
         max_len: int = len(text[0])
         for line in text:
             if (max_len < len(line)):
@@ -27,7 +27,18 @@ class Format(BaseModel):
         for line in text:
             while (len(line) < max_len):
                 line += ' '
-            temp.append('[ ]    ->  ' + line)
+            temp.append(f'[{marker}]    ->  ' + line)
+        return (temp)
+
+    def ls(self, text: List[str]) -> str or List:
+        temp: List = []
+        if (type(text) is str):
+            return (text)
+        for line in range(len(text)):
+            if (line < len(text)):
+                temp.append(text[line])
+            else:
+                temp.append(text[line])
         return (temp)
 
 
