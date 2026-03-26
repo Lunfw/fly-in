@@ -49,7 +49,7 @@ debug:
 	@echo "$(BOLD)You can change the theme by pressing CTRL + P in the debugger.$(RESET)"
 	@echo "$(GREY)Tip: Monokai/Mono & Dark Vim support your terminal's opacity and default themselves to your original terminal theme.$(RESET)"
 	@echo "$(BOLD)$(VENV)/bin/$(PDB) src.main$(RESET)"
-	@sleep 1;
+	@sleep 1.5;
 	@clear;
 	$(VENV)/bin/$(PDB) -m src.main
 

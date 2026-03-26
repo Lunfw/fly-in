@@ -11,7 +11,7 @@ class Maps(BaseModel):
     colors: Colors = Field(default=Colors())
     form: Format = Field(default=Format())
 
-    def get_maps(self) -> Generator:
+    def get_diffs(self) -> Generator:
         temp: List[str] = []
         try:
             for entity in listdir('maps'):
@@ -32,6 +32,21 @@ class Maps(BaseModel):
                     break
             exit(1)
 
+    def get_map(self, folder: str) -> Generator:
+        temp: List[str] = []
+        temp.append('..')
+        try:
+            for entity in listdir(f'maps/{folder}'):
+                temp.append(entity)
+            else:
+                pass
+            for i in sorted(temp):
+                yield i
+        except FileNotFoundError:
+            print(self.colors.RED)
+            self.form.centered("This isn't supposed to happen...", stderr)
+            print(self.colors.RESET)
+            exit(1)
 
 class Menu(BaseModel):
     colors: Colors = Field(default=Colors())
@@ -41,21 +56,26 @@ class Menu(BaseModel):
     nav_lines: int = Field(default=0)
 
     def display(self) -> None:
-        body: List = list(maps for maps in self.maps.get_maps())
+        body: List = list(maps for maps in self.maps.get_diffs())
         selected = 0
         self.navigate(body, selected)
         while (True):
-            key = self.get_key()
+            key: str = self.get_key()
 
             if (key == '\x1b[A'):
                 selected = (selected - 1) % len(body)
             elif (key == '\x1b[B'):
                 selected = (selected + 1) % len(body)
+            elif (key == '\r'):
+                selected = selected % len(body)
+                body = list(self.maps.get_map(body[selected]))
+                if (body[selected] == '..'):
+                    body = list(maps for maps in self.maps.get_diffs())
             elif (key == '\x03'):
                 break
             self.navigate(body, selected)
 
-    def get_key(self):
+    def get_key(self) -> str:
         fd = stdin.fileno()
         old = tcgetattr(fd)
         try:
@@ -101,4 +121,4 @@ class Menu(BaseModel):
         self.form.centered(temp)
         print(self.colors.RESET)
 
-        self.nav_lines = len(head) + (len(items) * 2 + 2)
+        self.nav_lines = len(head) + (len(items) * 2 + 3)
