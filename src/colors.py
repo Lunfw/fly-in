@@ -33,7 +33,7 @@ class Format(BaseModel):
         for line in text:
             print(line.center(width), file=fd, flush=True)
 
-    def listing(self, text: (List | str), marker: str = ' ') -> str or List:
+    def listing(self, text: (List | str), marker: str = ' ') -> str | List:
         temp: List = []
         if (type(text) is str):
             return (f'[{marker}]    -> ' + text)
@@ -47,7 +47,7 @@ class Format(BaseModel):
             temp.append(f'[{marker}]    ->  ' + line)
         return (temp)
 
-    def ls(self, text: List[str]) -> str or List:
+    def ls(self, text: List[str]) -> str | List:
         temp: List = []
         if (type(text) is str):
             return (text)

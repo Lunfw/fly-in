@@ -55,8 +55,9 @@ class Menu(BaseModel):
     maps: Maps = Field(default=Maps())
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
+    last_folder: int = Field(default=0)
 
-    def display(self) -> str:
+    def display(self) -> None:
         body: List = list(maps for maps in self.maps.get_diffs())
         selected = 0
         self.navigate(body, selected)
@@ -64,16 +65,24 @@ class Menu(BaseModel):
             key: str = self.get_key()
 
             if (key == '\x1b[A'):
-                selected = (selected - 1) % len(body)
+                if (selected == 0):
+                    selected = 0
+                else:
+                    selected = selected - 1
             elif (key == '\x1b[B'):
-                selected = (selected + 1) % len(body)
+                if (selected == len(body) - 1):
+                    selected = len(body) - 1
+                else:
+                    selected = selected + 1
             elif (body[selected] == '..' and key == '\r'):
                 body = list(maps for maps in self.maps.get_diffs())
+                selected = self.last_folder
             elif ('.txt' in body[selected] and key == '\r'):
                 pass
             elif (key == '\r'):
-                selected = selected % len(body)
                 body = list(self.maps.get_map(body[selected]))
+                self.last_folder = selected
+                selected = 0
             elif (key == '\x03'):
                 break
             self.navigate(body, selected)
@@ -90,7 +99,7 @@ class Menu(BaseModel):
         finally:
             tcsetattr(fd, TCSADRAIN, old)
 
-    def navigate(self, items, selection):
+    def navigate(self, items, selected):
         if (self.first_draw):
             self.first_draw = False
         else:
@@ -108,21 +117,19 @@ class Menu(BaseModel):
         self.form.centered(head)
         self.form.centered('V Available maps V')
         self.form.centered('----------------')
-        self.form.centered(self.form.ls(items))
 
         print(self.colors.GREEN)
         max_len: int = max(len(item) for item in items)
         temp: List[str] = []
         for i, item in enumerate(items):
-            if (i == selection):
-                if (i == selection):
-                    marker = '#'
-                else:
-                    marker = ' '
-                padded: str = item.ljust(max_len)
-                temp.append(f'[{marker}]    ->| {padded}')
+            if (i == selected):
+                marker = '#'
+            else:
+                marker = ' '
+            padded: str = item.ljust(max_len)
+            temp.append(f'[{marker}]    ->| {padded}')
         self.form.centered(temp)
         print(self.colors.RESET)
 
-        self.nav_lines = len(head) + (len(items) * 2 + 5)
+        self.nav_lines = len(head) + (len(items) * 2 + 6)
         self.form.draw_margin()
