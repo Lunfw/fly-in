@@ -3,7 +3,7 @@ from sys import stdin, stdout
 from tty import setraw
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from pydantic import BaseModel, Field
-from typing import IO, List
+from typing import List
 
 
 class SimulationDisplay(BaseModel):
@@ -12,7 +12,7 @@ class SimulationDisplay(BaseModel):
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
 
-    def prompt(self, filename: str) -> str:
+    def prompt(self, filename: str) -> None:
         options: List = [
                     'Open',
                     'Generate',
@@ -21,7 +21,7 @@ class SimulationDisplay(BaseModel):
         selected: int = 0
         self.prompt_options(options, selected, filename)
         while (True):
-            key : str = self.get_key()
+            key: str = self.get_key()
 
             if (key == '\x1b[A'):
                 if (selected == 0):
@@ -59,7 +59,7 @@ class SimulationDisplay(BaseModel):
             self.first_draw = False
         else:
             stdout.write(f'\x1b[{self.nav_lines}A')
-            stdout.write(f'\x1b[J')
+            stdout.write('\x1b[J')
             stdout.flush()
 
         print(self.colors.WHITE)
@@ -85,4 +85,3 @@ class SimulationDisplay(BaseModel):
         with open(filename, 'r') as file:
             buffer: str = file.read()
         print('\n' + buffer)
-        

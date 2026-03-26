@@ -1,5 +1,5 @@
 from sys import exit, stderr
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 from src.menu import Menu
 
 

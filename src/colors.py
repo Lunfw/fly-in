@@ -59,7 +59,6 @@ class Format(BaseModel):
         return (temp)
 
     def putstr(self, text: (List[str] | str)) -> None:
-        temp: str = ''
         if (type(text) is str):
             print(text)
             return

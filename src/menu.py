@@ -110,7 +110,7 @@ class Menu(BaseModel):
         finally:
             tcsetattr(fd, TCSADRAIN, old)
 
-    def navigate(self, items, selected):
+    def navigate(self, items, selected) -> None:
         if (self.first_draw):
             self.first_draw = False
         else:
