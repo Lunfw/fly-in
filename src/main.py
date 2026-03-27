@@ -1,18 +1,17 @@
 from sys import exit, stderr
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from src.menu import Menu
 
 
-class Main(BaseModel):
-    def main(self):
+class Main:
+    def main(self) -> None:
         '''
              Small main program.
         '''
         try:
             menu = Menu()
             menu.display()
-        except ValidationError as ve:
-            print(f'Caught: {ve[0]['msg']}', file=stderr)
+        except ValidationError:
             exit(1)
         finally:
             exit(0)

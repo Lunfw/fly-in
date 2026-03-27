@@ -25,7 +25,7 @@ class Format(BaseModel):
     '''
         Small lib for text formatting.
     '''
-    def centered(self, text: (List | str), fd: IO = stdout) -> None:
+    def centered(self, text: (List[str] | str), fd: IO[str] = stdout) -> None:
         width = get_terminal_size().columns
         if (type(text) is str):
             print(text.center(width), file=fd, flush=True)
@@ -33,8 +33,9 @@ class Format(BaseModel):
         for line in text:
             print(line.center(width), file=fd, flush=True)
 
-    def listing(self, text: (List | str), marker: str = ' ') -> str | List:
-        temp: List = []
+    def listing(self, text: (List[str] | str),
+                marker: str = ' ') -> str | List[str]:
+        temp: List[str] = []
         if (type(text) is str):
             return (f'[{marker}]    -> ' + text)
         max_len: int = len(text[0])
@@ -47,8 +48,8 @@ class Format(BaseModel):
             temp.append(f'[{marker}]    ->  ' + line)
         return (temp)
 
-    def ls(self, text: List[str]) -> str | List:
-        temp: List = []
+    def ls(self, text: (List[str] | str)) -> str | List[str]:
+        temp: List[str] = []
         if (type(text) is str):
             return (text)
         for line in range(len(text)):

@@ -12,7 +12,7 @@ class Maps(BaseModel):
     colors: Colors = Field(default=Colors())
     form: Format = Field(default=Format())
 
-    def get_diffs(self) -> Generator:
+    def get_diffs(self) -> Generator[str]:
         temp: List[str] = []
         try:
             for entity in listdir('maps'):
@@ -33,7 +33,7 @@ class Maps(BaseModel):
             print(self.colors.RESET)
             exit(1)
 
-    def get_map(self, folder: str) -> Generator:
+    def get_map(self, folder: str) -> Generator[str]:
         temp: List[str] = []
         temp.append('..')
         try:
@@ -62,7 +62,7 @@ class Menu(BaseModel):
     dirpath: str = Field(default='')
 
     def display(self) -> None:
-        body: List = list(maps for maps in self.maps.get_diffs())
+        body: List[str] = list(maps for maps in self.maps.get_diffs())
         selected = 0
         self.navigate(body, selected)
         while (True):
@@ -112,7 +112,7 @@ class Menu(BaseModel):
         finally:
             tcsetattr(fd, TCSADRAIN, old)
 
-    def navigate(self, items, selected) -> None:
+    def navigate(self, items: List[str], selected: int) -> None:
         if (self.first_draw):
             self.first_draw = False
         else:
@@ -120,7 +120,7 @@ class Menu(BaseModel):
             stdout.write('\x1b[J')
             stdout.flush()
 
-        head: List = [
+        head: List[str] = [
             self.colors.CYAN,
             'Welcome!',
             'This is a drone simulation program.',

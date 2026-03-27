@@ -28,7 +28,8 @@ help:
 	echo "$(CYAN)make clean$(RESET)		-	deletes cache, temp files, eventually the venv is there is one"; \
 	echo "$(CYAN)make lint$(RESET)		-	runs flake8 & mypy"; \
 	echo "$(CYAN)make lint-strict$(RESET)	-	runs make lint, in strict mode"; \
-	echo "$(CYAN)make help/make$(RESET)		-	this screen"
+	echo "$(CYAN)make help$(RESET)		-	this screen"; \
+	echo "$(CYAN)make$(RESET)			-	...this, but in a shorter command\n"
 
 run:
 	@if [ ! -d $(VENV) ]; then \

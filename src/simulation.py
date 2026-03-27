@@ -7,12 +7,20 @@ from typing import List
 from time import sleep
 
 
+class SimulationRunner(BaseModel):
+    color: Colors = Field(default=Colors())
+    form: Format = Field(default=Format())
+
+    def send_file(self, filename: str) -> None:
+        pass
+
+
 class SimulationDisplay(BaseModel):
     colors: Colors = Field(default=Colors())
     form: Format = Field(default=Format())
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
-    options: List = Field(default=['Open', 'Generate', 'Close'])
+    options: List[str] = Field(default=['Open', 'Generate', 'Close'])
     popped: int = Field(default=0)
 
     def prompt(self, filename: str) -> None:
@@ -56,8 +64,9 @@ class SimulationDisplay(BaseModel):
         finally:
             tcsetattr(fd, TCSADRAIN, old)
 
-    def prompt_options(self, items, selected, filename: str) -> None:
-
+    def prompt_options(self, items: List[str],
+                       selected: int,
+                       filename: str) -> None:
         if (self.first_draw):
             self.first_draw = False
         else:
@@ -91,7 +100,7 @@ class SimulationDisplay(BaseModel):
         print('\n' + buffer)
         sleep(2)
         print(f'[{self.colors.RED}R{self.colors.RESET}]eturn    -   ', end='')
-        print(f'[{self.colors.BLUE}E{self.colors.RESET}]dit')
+        print(f'[{self.colors.CYAN}E{self.colors.RESET}]dit')
         while (True):
             key: str = self.get_key()
             if (key == 'R' or key == 'r'):
