@@ -1,11 +1,11 @@
 from src.colors import Colors, Format
 from pydantic import BaseModel, Field
-from typing import Dict, List, Self
+from typing import List, Self
 
 
 class Node(BaseModel):
-    NEXT: Self = Field(default=None)
-    VALUE: tuple[str] = Field(default=('', ''))
+    NEXT: (Self | None) = Field(default=None)
+    VALUE: tuple[tuple[int, int], str] = Field(default=((0, 0), ''))
     COLOR: str = Field(default='WHITE')
 
 
@@ -23,6 +23,11 @@ class Generator(BaseModel):
     parsed: Parsed = Field(default=Parsed())
     waypoints: List[Node] = Field(default=[])
 
+    def debug(self) -> None:
+        print(f'\nFILENAME: {self.file}')
+        print(f'PARSED: {self.parsed}')
+        print(f'NB_DRONES: {self.parsed.nb_drones}')
+
     def receive(self, filename: str) -> None:
         with open(filename, 'r') as f:
             self.buffer = f.read()
@@ -36,19 +41,24 @@ class Generator(BaseModel):
             if (not line or line.startswith('#') or ': ' not in line):
                 continue
             key, value = line.split(': ', 1)
-            parts: List[str] = value.split(' ')
+            part: List[str] = value.split(' ')
             try:
                 if (key == 'nb_drones'):
-                    self.parsed.nb_drones = int(parts[0])
+                    self.parsed.nb_drones = int(part[0])
                 elif (key in ('start_hub', 'end_hub', 'hub')):
-                    coords: tuple = (parts[1], parts[2])
-                    if (len(parts[3]) > 3):
-                        colors = parts[3]
+                    coords: tuple[str, str] = (part[1], part[2])
+                    if (len(part[3]) > 3):
+                        color = part[3].split('=')[1].upper()
                     else:
-                        colors = 'WHITE'
-                    node = ((parts[0], coords), colors)
+                        color = 'WHITE'
+                    node: tuple[tuple[int, int], str] = (coords, color)
+                    if (key == 'start_hub'):
+                        self.parsed.start = node
+                    if (key == 'end_hub'):
+                        self.parsed.goal = node
             except IndexError:
                 print(self.colors.RED)
                 print(f'# INVALID PARAM: got {line}')
                 print(self.colors.RESET)
                 exit(1)
+        self.debug()

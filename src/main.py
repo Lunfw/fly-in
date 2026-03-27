@@ -1,4 +1,4 @@
-from sys import exit, stderr
+from sys import exit
 from pydantic import ValidationError
 from src.menu import Menu
 

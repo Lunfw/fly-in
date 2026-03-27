@@ -2,19 +2,10 @@ from src.colors import Colors, Format
 from src.generator import Generator
 from sys import stdin, stdout
 from tty import setraw
-from src.generator import Generator
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from pydantic import BaseModel, Field
 from typing import List
 from time import sleep
-
-
-class SimulationRunner(BaseModel):
-    color: Colors = Field(default=Colors())
-    form: Format = Field(default=Format())
-
-    def send_file(self, filename: str) -> List[str]:
-        pass
 
 
 class SimulationDisplay(BaseModel):
