@@ -11,8 +11,8 @@ class Node(BaseModel):
 
 class Parsed(BaseModel):
     nb_drones: int = Field(default=0)
-    start: tuple[tuple[str, str], str] = Field(default=(('', ''), ''))
-    goal: tuple[tuple[str, str], str] = Field(default=(('', ''), ''))
+    start: tuple[tuple[int, int], str] = Field(default=((0, 0), ''))
+    goal: tuple[tuple[int, int], str] = Field(default=((0, 0), ''))
 
 
 class Generator(BaseModel):
@@ -46,7 +46,7 @@ class Generator(BaseModel):
                 if (key == 'nb_drones'):
                     self.parsed.nb_drones = int(part[0])
                 elif (key in ('start_hub', 'end_hub', 'hub')):
-                    coords: tuple[str, str] = (part[1], part[2])
+                    coords: tuple[int, int] = (int(part[1]), int(part[2]))
                     if (len(part[3]) > 3):
                         color = part[3].split('=')[1].upper()
                     else:

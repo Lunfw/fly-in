@@ -38,18 +38,18 @@ class SimulationDisplay(BaseModel):
                 self.popped += 1
                 self.get_content(f'maps/{filename}')
             elif (self.options[selected] == 'Generate' and key == '\r'):
-                self.popped += 1
                 self.options.pop(selected)
                 self.first_draw = True
                 self.generator.receive(f'maps/{filename}')
+                self.popped += 1
             elif (self.options[selected] == 'Close' and key == '\r'):
-                self.popped = 0
                 self.options = ['Open', 'Generate', 'Close']
                 self.first_draw = True
                 break
             elif (key == '\x03'):
                 exit(0)
             self.prompt_options(self.options, selected, filename)
+        self.popped = 0
 
     def get_key(self) -> str:
         fd = stdin.fileno()
