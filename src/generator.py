@@ -26,14 +26,13 @@ class Generator(BaseModel):
     def debug(self) -> None:
         print(f'\nFILENAME: {self.file}')
         print(f'PARSED: {self.parsed}')
-        print(f'NB_DRONES: {self.parsed.nb_drones}')
+        print(f'NB_DRONES: {self.parsed.nb_drones}\n')
 
     def receive(self, filename: str) -> None:
         with open(filename, 'r') as f:
             self.buffer = f.read()
             self.file = filename
         f.close()
-        self.parser()
 
     def parser(self) -> None:
         for line in self.buffer.split('\n'):

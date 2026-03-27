@@ -40,8 +40,8 @@ class SimulationDisplay(BaseModel):
             elif (self.options[selected] == 'Generate' and key == '\r'):
                 self.options.pop(selected)
                 self.first_draw = True
-                self.generator.receive(f'maps/{filename}')
                 self.popped += 1
+                self.generator.receive(f'maps/{filename}')
             elif (self.options[selected] == 'Close' and key == '\r'):
                 self.options = ['Open', 'Generate', 'Close']
                 self.first_draw = True
