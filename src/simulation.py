@@ -4,6 +4,7 @@ from tty import setraw
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from pydantic import BaseModel, Field
 from typing import List
+from time import sleep
 
 
 class SimulationDisplay(BaseModel):
@@ -11,15 +12,12 @@ class SimulationDisplay(BaseModel):
     form: Format = Field(default=Format())
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
+    options: List = Field(default=['Open', 'Generate', 'Close'])
+    popped: int = Field(default=0)
 
     def prompt(self, filename: str) -> None:
-        options: List = [
-                    'Open',
-                    'Generate',
-                    'Close',
-                ]
         selected: int = 0
-        self.prompt_options(options, selected, filename)
+        self.prompt_options(self.options, selected, filename)
         while (True):
             key: str = self.get_key()
 
@@ -29,17 +27,21 @@ class SimulationDisplay(BaseModel):
                 else:
                     selected = selected - 1
             elif (key == '\x1b[B'):
-                if (selected == len(options) - 1):
-                    selected = len(options) - 1
+                if (selected == len(self.options) - 1):
+                    selected = len(self.options) - 1
                 else:
                     selected = selected + 1
-            elif (options[selected] == 'Open' and key == '\r'):
+            elif (self.options[selected] == 'Open' and key == '\r'):
+                self.options.pop(selected)
+                self.popped += 1
                 self.get_content(f'maps/{filename}')
-            elif (options[selected] == 'Close' and key == '\r'):
+            elif (self.options[selected] == 'Close' and key == '\r'):
+                self.popped = 0
+                self.options = ['Open', 'Generate', 'Close']
                 break
             elif (key == '\x03'):
                 exit(0)
-            self.prompt_options(options, selected, filename)
+            self.prompt_options(self.options, selected, filename)
 
     def get_key(self) -> str:
         fd = stdin.fileno()
@@ -79,9 +81,22 @@ class SimulationDisplay(BaseModel):
             temp.append(f'[{marker}]    ->| {padded}')
         self.form.putstr(temp)
 
-        self.nav_lines = len(temp) * 2
+        self.nav_lines = len(temp) * 2 + self.popped
 
     def get_content(self, filename: str) -> None:
         with open(filename, 'r') as file:
             buffer: str = file.read()
+        lines: int = buffer.count('\n')
         print('\n' + buffer)
+        sleep(2)
+        print(f'[{self.colors.RED}R{self.colors.RESET}]eturn    -   ', end='')
+        print(f'[{self.colors.BLUE}E{self.colors.RESET}]dit')
+        while (True):
+            key: str = self.get_key()
+            if (key == 'R' or key == 'r'):
+                break
+            elif (key == 'E' or key == 'e'):
+                pass
+            elif (key == '\x03'):
+                exit(0)
+        self.nav_lines = lines + 9

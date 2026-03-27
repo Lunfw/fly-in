@@ -5,7 +5,7 @@ from os import listdir, path
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from tty import setraw
 from sys import stderr, stdin, stdout
-from typing import Generator, List
+from typing import Generator, List, Any
 
 
 class Maps(BaseModel):
@@ -99,8 +99,8 @@ class Menu(BaseModel):
         self.nav_lines = 0
 
     def get_key(self) -> str:
-        fd = stdin.fileno()
-        old = tcgetattr(fd)
+        fd: int = stdin.fileno()
+        old: List[Any] = tcgetattr(fd)
         try:
             setraw(fd)
             char = stdin.read(1)
