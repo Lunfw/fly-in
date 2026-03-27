@@ -84,6 +84,8 @@ class Menu(BaseModel):
             elif ('txt' in body[selected] and key == '\r'):
                 self.is_txt = True
                 self.sim.prompt(self.dirpath + '/' + body[selected])
+                self.nav_lines += 2
+                self.is_txt = False
             elif (key == '\r'):
                 self.dirpath = body[selected]
                 body = list(self.maps.get_map(body[selected]))

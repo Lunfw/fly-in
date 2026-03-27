@@ -38,6 +38,7 @@ class SimulationDisplay(BaseModel):
             elif (self.options[selected] == 'Close' and key == '\r'):
                 self.popped = 0
                 self.options = ['Open', 'Generate', 'Close']
+                self.first_draw = True
                 break
             elif (key == '\x03'):
                 exit(0)
