@@ -1,6 +1,8 @@
 from src.colors import Colors, Format
+from src.generator import Generator
 from sys import stdin, stdout
 from tty import setraw
+from src.generator import Generator
 from termios import tcgetattr, tcsetattr, TCSADRAIN
 from pydantic import BaseModel, Field
 from typing import List
@@ -11,7 +13,7 @@ class SimulationRunner(BaseModel):
     color: Colors = Field(default=Colors())
     form: Format = Field(default=Format())
 
-    def send_file(self, filename: str) -> None:
+    def send_file(self, filename: str) -> List[str]:
         pass
 
 
@@ -22,6 +24,7 @@ class SimulationDisplay(BaseModel):
     nav_lines: int = Field(default=0)
     options: List[str] = Field(default=['Open', 'Generate', 'Close'])
     popped: int = Field(default=0)
+    generator: Generator = Field(default=Generator())
 
     def prompt(self, filename: str) -> None:
         selected: int = 0
@@ -43,6 +46,11 @@ class SimulationDisplay(BaseModel):
                 self.options.pop(selected)
                 self.popped += 1
                 self.get_content(f'maps/{filename}')
+            elif (self.options[selected] == 'Generate' and key == '\r'):
+                self.popped += 1
+                self.options.pop(selected)
+                self.first_draw = True
+                self.generator.receive(f'maps/{filename}')
             elif (self.options[selected] == 'Close' and key == '\r'):
                 self.popped = 0
                 self.options = ['Open', 'Generate', 'Close']
@@ -96,6 +104,7 @@ class SimulationDisplay(BaseModel):
     def get_content(self, filename: str) -> None:
         with open(filename, 'r') as file:
             buffer: str = file.read()
+        file.close()
         lines: int = buffer.count('\n')
         print('\n' + buffer)
         sleep(2)
