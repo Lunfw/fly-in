@@ -1,5 +1,5 @@
 from src.colors import Colors, Format
-from pydantic import BaseModel, Field, model_validator, BeforeValidator
+from pydantic import BaseModel, Field, model_validator
 from typing import List, Self
 from sys import stderr
 
@@ -25,8 +25,9 @@ class MetaData(BaseModel):
             self.ZONE = 'normal'
         return (self)
 
+    '''
     @model_validator(mode='after')
-    def validate_color(self) -> str:
+    def validate_color(self) -> Self:
         valid_colors: tuple[str] = self.colors.get_colors()
         if (self.COLOR not in valid_colors):
             self.form.putstr(
@@ -34,9 +35,10 @@ class MetaData(BaseModel):
                     stderr)
             self.COLOR = 'NONE'
         return (self)
+    '''
 
     @model_validator(mode='after')
-    def validate_drones(self) -> int:
+    def validate_drones(self) -> Self:
         if (self.MAX_DRONES <= 0):
             self.form.putstr(
                     self.form.colored('# NB_DRONES < 0', self.colors.RED),
@@ -46,21 +48,23 @@ class MetaData(BaseModel):
 
 
 class Node(BaseModel):
-    ADJ: (List[Self] | List[None]) = Field(default=[])
+    ADJ: (List[Self]) = Field(default=[])
     VALUE: tuple[int, int] = Field(default=((0, 0)))
     META: MetaData = Field(default=MetaData())
+    form: Format = Field(default=Format())
+    colors: Colors = Field(default=Colors())
 
     def connect(self, other: Self) -> None:
         self.ADJ.append(other)
 
     @model_validator(mode='after')
-    def validate_self(self) -> tuple[int, int]:
-        if (self.VALUE[0][0] < 0 or self.VALUE[0][1] < 0):
+    def validate_self(self) -> Self:
+        if (self.VALUE[0] < 0 or self.VALUE[0] < 0):
             self.form.putstr(
                     self.form.colored('# INVALID NODE', self.colors.RED),
                     stderr)
-            return (0, 0)
-        return (self.ADJ)
+            self.VALUE = (0, 0)
+        return (self)
 
 
 class Generator(BaseModel):
@@ -68,8 +72,8 @@ class Generator(BaseModel):
     form: Format = Field(default=Format())
     file: str = Field(default='')
     buffer: str = Field(default='')
-    start: tuple[tuple[int, int], str] = Field(default=((0, 0), ''))
-    goal: tuple[tuple[int, int], str] = Field(default=((0, 0), ''))
+    start: tuple[int, int] = Field(default=(0, 0))
+    goal: tuple[int, int] = Field(default=(0, 0))
     nodes: dict[str, Node] = Field(default={})
     nb_drones: int = Field(default=0)
 
@@ -78,7 +82,10 @@ class Generator(BaseModel):
         print(f'START: {self.start}')
         print(f'GOAL: {self.goal}')
         print(f'NB_DRONES: {self.nb_drones}')
-        print(f'NODES: {self.nodes}\n')
+        print('NODES:')
+        for i in list(self.nodes.values()):
+            print(f'-   {i.VALUE} -> {i.ADJ}')
+        print('')
 
     def receive(self, filename: str) -> None:
         with open(filename, 'r') as f:
@@ -103,12 +110,13 @@ class Generator(BaseModel):
                         color = part[3].split('=')[1].upper()
                     else:
                         color = 'NONE'
-                    node: tuple[tuple[int, int], str] = (coords, color)
+                    node: Node = Node(VALUE=coords,
+                                      META=MetaData(COLOR=color))
                     self.nodes[part[0]] = node
                     if (key == 'start_hub'):
-                        self.start = node
+                        self.start = node.VALUE
                     elif (key == 'end_hub'):
-                        self.goal = node
+                        self.goal = node.VALUE
                     elif (key == 'connection'):
                         a, b = value.split('-')
                         self.nodes[a].connect(self.nodes[b])
