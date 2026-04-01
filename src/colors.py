@@ -19,6 +19,12 @@ class Colors(BaseModel):
     GREY: str = Field(default='\033[1;90m')
     RESET: str = Field(default='\033[0m')
 
+    def get_colors(self) -> List[str]:
+        temp: List[str] = ['NONE']
+        for i in self.model_fields.keys():
+            temp.append(i)
+        return (temp)
+
 
 class Format(BaseModel):
     colors: Colors = Field(default=Colors())
@@ -32,6 +38,13 @@ class Format(BaseModel):
             return (None)
         for line in text:
             print(line.center(width), file=fd, flush=True)
+
+    def putstr(self, text: (List[str] | str), fd: IO[str] = stdout) -> None:
+        if (type(text) is str):
+            print(text, file=fd)
+            return
+        for word in text:
+            print(word, file=fd)
 
     def listing(self, text: (List[str] | str),
                 marker: str = ' ') -> str | List[str]:
@@ -59,13 +72,6 @@ class Format(BaseModel):
                 temp.append(text[line])
         return (temp)
 
-    def putstr(self, text: (List[str] | str)) -> None:
-        if (type(text) is str):
-            print(text)
-            return
-        for word in text:
-            print(word)
-
     def draw_margin(self) -> None:
         width = get_terminal_size().columns
         margin = self.colors.WHITE + '|< '
@@ -73,3 +79,12 @@ class Format(BaseModel):
             margin += '='
         margin += ' >|' + self.colors.RESET
         self.centered(margin)
+
+    def colored(self,
+                text: (List[str] | str),
+                color: str) -> str | List[str]:
+        if (type(text) is str):
+            return (color + text + self.colors.RESET)
+        for word in text:
+            word = color + word + self.colors.RESET
+        return (text)

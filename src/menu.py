@@ -144,5 +144,5 @@ class Menu(BaseModel):
         self.form.centered(temp)
         print(self.colors.RESET)
 
-        self.nav_lines = len(head) + (len(items) * 2 + 6)
+        self.nav_lines = len(head) + (len(items) * 2 + 50)
         self.form.draw_margin()
