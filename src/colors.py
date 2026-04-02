@@ -27,7 +27,6 @@ class Colors(BaseModel):
 
 
 class Format(BaseModel):
-    colors: Colors = Field(default=Colors())
     '''
         Small lib for text formatting.
     '''
@@ -70,21 +69,21 @@ class Format(BaseModel):
                 temp.append(text[line])
             else:
                 temp.append(text[line])
-        return (temp)
+        return (temp)\
 
     def draw_margin(self) -> None:
         width = get_terminal_size().columns
-        margin = self.colors.WHITE + '|< '
+        margin = '\033[1;90m' + '|< '
         for i in range(width - 6):
             margin += '='
-        margin += ' >|' + self.colors.RESET
+        margin += ' >|' + '\033[0m'
         self.centered(margin)
 
     def colored(self,
                 text: (List[str] | str),
                 color: str) -> str | List[str]:
         if (type(text) is str):
-            return (color + text + self.colors.RESET)
+            return (color + text + '\033[0m')
         for word in text:
-            word = color + word + self.colors.RESET
+            word = color + word + '\033[0m'
         return (text)

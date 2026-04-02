@@ -31,7 +31,7 @@ class MetaData(BaseModel):
         valid_colors: tuple[str] = self.colors.get_colors()
         if (self.COLOR not in valid_colors):
             self.form.putstr(
-                    self.form.colored('# INVALID COLOR', self.colors.RED),
+                    self.form.colored('\n# INVALID COLOR', self.colors.RED),
                     stderr)
             self.COLOR = 'NONE'
         return (self)
@@ -41,7 +41,7 @@ class MetaData(BaseModel):
     def validate_drones(self) -> Self:
         if (self.MAX_DRONES <= 0):
             self.form.putstr(
-                    self.form.colored('# NB_DRONES < 0', self.colors.RED),
+                    self.form.colored('\n# NB_DRONES < 0', self.colors.RED),
                     stderr)
             self.MAX_DRONES = 1
         return (self)
@@ -61,7 +61,7 @@ class Node(BaseModel):
     def validate_self(self) -> Self:
         if (self.VALUE[0] < 0 or self.VALUE[0] < 0):
             self.form.putstr(
-                    self.form.colored('# INVALID NODE', self.colors.RED),
+                    self.form.colored('\n# INVALID NODE', self.colors.RED),
                     stderr)
             self.VALUE = (0, 0)
         return (self)
@@ -104,7 +104,7 @@ class Generator(BaseModel):
             try:
                 if (key == 'nb_drones'):
                     self.nb_drones = int(part[0])
-                elif (key in ('start_hub', 'end_hub', 'hub')):
+                elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
                     coords: tuple[int, int] = (int(part[1]), int(part[2]))
                     if (len(part[3]) > 3):
                         color = part[3].split('=')[1].upper()
@@ -123,6 +123,6 @@ class Generator(BaseModel):
                         self.nodes[b].connect(self.nodes[a])
             except IndexError:
                 self.form.putstr(
-                        self.form.colored('# INVALID PARAM', self.colors.RED),
+                        self.form.colored('\n# INVALID PARAM', self.colors.RED),
                         stderr)
         self.debug()
