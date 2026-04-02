@@ -107,13 +107,28 @@ class Generator(BaseModel):
                     self.nb_drones = int(part[0])
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
                     if (key != 'connection' and len(part[3]) > 3):
-                        color = part[3].split('=')[1].upper()[:-1]
-                    else:
-                        color = 'NONE'
+                        metadata: List[str] = part[3].split(' ')[1:-1]
+                        for i in range(len(metadata)):
+                            if (metadata[i] == 'color'):
+                                color = metadata[i + 1]
+                            else:
+                                color = 'NONE'
+                            if (metadata[i] == 'zone'):
+                                zone = metadata[i + 1]
+                            else:
+                                zone = 'normal'
+                            if (metadata[i] == 'max_drones'):
+                                max_drones = int(metadata[i + 1])
+                            else:
+                                max_drones = 1
                     if (key != 'connection'):
                         coords: tuple[int, int] = (int(part[1]), int(part[2]))
                         node: Node = Node(VALUE=coords,
-                                          META=MetaData(COLOR=color))
+                                          META=MetaData(
+                                              MAX_DRONES=max_drones,
+                                              ZONE=zone,
+                                              COLOR=color)
+                                          )
                         self.nodes[part[0]] = node
                     if (key == 'start_hub'):
                         self.start = node.VALUE
@@ -123,8 +138,12 @@ class Generator(BaseModel):
                         a, b = value.split('-')
                         self.nodes[a].connect(self.nodes[b])
                         self.nodes[b].connect(self.nodes[a])
+                    color = 'NONE'
+                    zone = 'normal'
+                    max_drones = 1
             except IndexError:
                 self.form.putstr(
                         self.form.colored('\n# INVALID PARAM', self.colors.RED),
                         stderr)
         self.debug()
+        self.nodes = {}
