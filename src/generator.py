@@ -25,9 +25,9 @@ class MetaData(BaseModel):
             self.ZONE = 'normal'
         return (self)
 
-    '''
     @model_validator(mode='after')
     def validate_color(self) -> Self:
+        self.COLOR = self.COLOR
         valid_colors: tuple[str] = self.colors.get_colors()
         if (self.COLOR not in valid_colors):
             self.form.putstr(
@@ -35,7 +35,6 @@ class MetaData(BaseModel):
                     stderr)
             self.COLOR = 'NONE'
         return (self)
-    '''
 
     @model_validator(mode='after')
     def validate_drones(self) -> Self:
@@ -84,7 +83,9 @@ class Generator(BaseModel):
         print(f'NB_DRONES: {self.nb_drones}')
         print('NODES:')
         for i in list(self.nodes.values()):
-            print(f'-   {i.VALUE} -> {i.ADJ}')
+            print(f'\n#   {i.VALUE}:')
+            for j in i.ADJ:
+                print(f'    ->| {j.VALUE}')
         print('')
 
     def receive(self, filename: str) -> None:
@@ -105,14 +106,15 @@ class Generator(BaseModel):
                 if (key == 'nb_drones'):
                     self.nb_drones = int(part[0])
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
-                    coords: tuple[int, int] = (int(part[1]), int(part[2]))
-                    if (len(part[3]) > 3):
-                        color = part[3].split('=')[1].upper()
+                    if (key != 'connection' and len(part[3]) > 3):
+                        color = part[3].split('=')[1].upper()[:-1]
                     else:
                         color = 'NONE'
-                    node: Node = Node(VALUE=coords,
-                                      META=MetaData(COLOR=color))
-                    self.nodes[part[0]] = node
+                    if (key != 'connection'):
+                        coords: tuple[int, int] = (int(part[1]), int(part[2]))
+                        node: Node = Node(VALUE=coords,
+                                          META=MetaData(COLOR=color))
+                        self.nodes[part[0]] = node
                     if (key == 'start_hub'):
                         self.start = node.VALUE
                     elif (key == 'end_hub'):
