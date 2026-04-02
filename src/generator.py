@@ -8,7 +8,7 @@ class MetaData(BaseModel):
     ZONE: str = Field(default='normal')
     COLOR: str = Field(default='NONE')
     MAX_DRONES: int = Field(default=1, ge=0)
-    form: Format = Field(default=Format())
+    MAX_LINK_CAPACITY: int = Field(default=1, ge=0)
 
     @model_validator(mode='after')
     def validate_zone(self) -> Self:
@@ -18,8 +18,8 @@ class MetaData(BaseModel):
                                                   'priority'
                                                   )
         if (self.ZONE not in valid_zones):
-            self.form.putstr(
-                    self.form.colored('# INVALID ZONE', 'RED'),
+            Format().putstr(
+                    Format().colored('# INVALID ZONE', 'RED'),
                     stderr)
             self.ZONE = 'normal'
         return (self)
@@ -29,8 +29,8 @@ class MetaData(BaseModel):
         self.COLOR = self.COLOR
         valid_colors: List[str] = Colors().get_colors()
         if (self.COLOR not in valid_colors):
-            self.form.putstr(
-                    self.form.colored('\n# INVALID COLOR', 'RED'),
+            Format().putstr(
+                    Format().colored('\n# INVALID COLOR', 'RED'),
                     stderr)
             self.COLOR = 'NONE'
         return (self)
@@ -38,10 +38,19 @@ class MetaData(BaseModel):
     @model_validator(mode='after')
     def validate_drones(self) -> Self:
         if (self.MAX_DRONES <= 0):
-            self.form.putstr(
-                    self.form.colored('\n# NB_DRONES < 0', 'RED'),
+            Format().putstr(
+                    Format().colored('\n# NB_DRONES < 0', 'RED'),
                     stderr)
             self.MAX_DRONES = 1
+        return (self)
+
+    @model_validator(mode='after')
+    def validate_capacity(self) -> Self:
+        if (self.MAX_LINK_CAPACITY <= 0):
+            Format().putstr(
+                    Format().colored('\n# CAPACITY < 0', 'RED'),
+                    stderr)
+            self.MAX_LINK_CAPACITY = 1
         return (self)
 
 
@@ -49,7 +58,6 @@ class Node(BaseModel):
     ADJ: (List[Self]) = Field(default=[])
     VALUE: tuple[int, int] = Field(default=((0, 0)))
     META: MetaData = Field(default=MetaData())
-    form: Format = Field(default=Format())
 
     def connect(self, other: Self) -> None:
         self.ADJ.append(other)
@@ -57,16 +65,14 @@ class Node(BaseModel):
     @model_validator(mode='after')
     def validate_self(self) -> Self:
         if (self.VALUE[0] < 0 or self.VALUE[0] < 0):
-            self.form.putstr(
-                    self.form.colored('\n# INVALID NODE', 'RED'),
+            Format().putstr(
+                    Format().colored('\n# INVALID NODE', 'RED'),
                     stderr)
             self.VALUE = (0, 0)
         return (self)
 
 
 class Generator(BaseModel):
-    colors: Colors = Field(default=Colors())
-    form: Format = Field(default=Format())
     file: str = Field(default='')
     buffer: str = Field(default='')
     start: tuple[int, int] = Field(default=(0, 0))
@@ -107,7 +113,11 @@ class Generator(BaseModel):
                     meta: MetaData = MetaData()
                     if (key != 'connection' and len(part[3]) > 3):
                         metadata: List[str] = part[3].split(' ')[1:-1]
-                        tup: tuple[str, str, str] = ('color', 'zone', 'max_drones')
+                        tup: tuple[str, str, str, str] = ('color',
+                                                         'zone',
+                                                         'max_drones',
+                                                         'max_link_capacity'
+                                                         )
                         for i in range(len(metadata)):
                             if (metadata[i] in tup):
                                 setattr(meta,
@@ -127,8 +137,8 @@ class Generator(BaseModel):
                         self.nodes[a].connect(self.nodes[b])
                         self.nodes[b].connect(self.nodes[a])
             except IndexError:
-                self.form.putstr(
-                        self.form.colored('\n# INVALID PARAM', self.colors.RED),
+                Format().putstr(
+                        Format().colored('\n# INVALID PARAM', RED),
                         stderr)
         self.debug()
         self.nodes = {}

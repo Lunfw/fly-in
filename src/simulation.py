@@ -14,7 +14,6 @@ class SimulationDisplay(BaseModel):
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
     options: List[str] = Field(default=['Open', 'Generate', 'Close'])
-    popped: int = Field(default=0)
     generator: Generator = Field(default=Generator())
 
     def prompt(self, filename: str) -> None:
@@ -35,12 +34,10 @@ class SimulationDisplay(BaseModel):
                     selected = selected + 1
             elif (self.options[selected] == 'Open' and key == '\r'):
                 self.options.pop(selected)
-                self.popped += 1
                 self.get_content(f'maps/{filename}')
             elif (self.options[selected] == 'Generate' and key == '\r'):
                 self.options.pop(selected)
                 self.first_draw = True
-                self.popped += 1
                 self.generator.receive(f'maps/{filename}')
             elif (self.options[selected] == 'Close' and key == '\r'):
                 self.options = ['Open', 'Generate', 'Close']
@@ -49,7 +46,6 @@ class SimulationDisplay(BaseModel):
             elif (key == '\x03'):
                 exit(0)
             self.prompt_options(self.options, selected, filename)
-        self.popped = 0
 
     def get_key(self) -> str:
         fd = stdin.fileno()
@@ -89,7 +85,7 @@ class SimulationDisplay(BaseModel):
             temp.append(f'[{marker}]    ->| {padded}')
         self.form.putstr(temp)
 
-        self.nav_lines = len(temp) * 2 + self.popped
+        self.nav_lines = len(temp) + 2
 
     def get_content(self, filename: str) -> None:
         with open(filename, 'r') as file:
@@ -108,4 +104,4 @@ class SimulationDisplay(BaseModel):
                 pass
             elif (key == '\x03'):
                 exit(0)
-        self.nav_lines = lines + 9
+        self.nav_lines = lines + 8
