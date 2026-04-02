@@ -8,7 +8,6 @@ class MetaData(BaseModel):
     ZONE: str = Field(default='NORMAL')
     COLOR: str = Field(default='NONE')
     MAX_DRONES: int = Field(default=1, ge=0)
-    MAX_LINK_CAPACITY: int = Field(default=0, ge=0)
 
     @model_validator(mode='after')
     def validate_zone(self) -> Self:
@@ -44,18 +43,10 @@ class MetaData(BaseModel):
             self.MAX_DRONES = 1
         return (self)
 
-    @model_validator(mode='after')
-    def validate_capacity(self) -> Self:
-        if (self.MAX_LINK_CAPACITY < 0):
-            Format().putstr(
-                    Format().colored('\n# CAPACITY < 0', 'RED'),
-                    stderr)
-            self.MAX_LINK_CAPACITY = 1
-        return (self)
-
 
 class Node(BaseModel):
     ADJ: (List[Self]) = Field(default=[])
+    MAX_LINK: List[int] = Field(default=[])
     VALUE: tuple[int, int] = Field(default=((0, 0)))
     META: MetaData = Field(default=MetaData())
 
@@ -90,6 +81,7 @@ class Generator(BaseModel):
             print(f'\n#   {i.VALUE} | [{i.META}]')
             for j in i.ADJ:
                 print(f'    ->| {j.VALUE}')
+            print(f'    ->| MAX_LINK: {i.MAX_LINK}')
         print('')
 
     def receive(self, filename: str) -> None:
@@ -112,17 +104,21 @@ class Generator(BaseModel):
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
                     meta: MetaData = MetaData()
                     if (key != 'connection' and len(part[3]) > 3):
-                        metadata: List[str] = part[3].strip('[]').split('=')
+                        metadata: List[str] = '='.join(part[3:]).strip('[]')
+                        metadata = metadata.split('=')
                         tup: tuple[str, str, str, str] = ('color',
                                                          'zone',
                                                          'max_drones',
-                                                         'max_link_capacity'
                                                          )
                         for i in range(len(metadata)):
                             if (metadata[i] in tup):
+                                if (metadata[i + 1].isdigit()):
+                                    metadata[i + 1] = int(metadata[i + 1])
+                                else:
+                                    metadata[i + 1] = metadata[i + 1].upper()
                                 setattr(meta,
                                         metadata[i].upper(),
-                                        metadata[i + 1].upper()
+                                        metadata[i + 1]
                                         )
                     if (key != 'connection'):
                         coords: tuple[int, int] = (int(part[1]), int(part[2]))
@@ -134,6 +130,11 @@ class Generator(BaseModel):
                         self.goal = node.VALUE
                     elif (key == 'connection'):
                         a, b = value.split('-')
+                        if (' ' in b):
+                            b, tmp = b.split(' ', 1)
+                            tmp = int(tmp.strip('[]').split('=')[1])
+                            self.nodes[a].MAX_LINK.append(int(tmp))
+                            self.nodes[b].MAX_LINK.append(int(tmp))
                         self.nodes[a].connect(self.nodes[b])
                         self.nodes[b].connect(self.nodes[a])
             except IndexError:
