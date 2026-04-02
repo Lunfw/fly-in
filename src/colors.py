@@ -69,7 +69,7 @@ class Format(BaseModel):
                 temp.append(text[line])
             else:
                 temp.append(text[line])
-        return (temp)\
+        return (temp)
 
     def draw_margin(self) -> None:
         width = get_terminal_size().columns

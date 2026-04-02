@@ -28,7 +28,7 @@ class MetaData(BaseModel):
     @model_validator(mode='after')
     def validate_color(self) -> Self:
         self.COLOR = self.COLOR
-        valid_colors: tuple[str] = self.colors.get_colors()
+        valid_colors: List[str] = self.colors.get_colors()
         if (self.COLOR not in valid_colors):
             self.form.putstr(
                     self.form.colored('\n# INVALID COLOR', self.colors.RED),
@@ -83,7 +83,7 @@ class Generator(BaseModel):
         print(f'NB_DRONES: {self.nb_drones}')
         print('NODES:')
         for i in list(self.nodes.values()):
-            print(f'\n#   {i.VALUE}:')
+            print(f'\n#   {i.VALUE} | [{i.META}]')
             for j in i.ADJ:
                 print(f'    ->| {j.VALUE}')
         print('')
@@ -106,29 +106,19 @@ class Generator(BaseModel):
                 if (key == 'nb_drones'):
                     self.nb_drones = int(part[0])
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
+                    meta: MetaData = MetaData()
                     if (key != 'connection' and len(part[3]) > 3):
                         metadata: List[str] = part[3].split(' ')[1:-1]
+                        tup: tuple[str, str, str] = ('color', 'zone', 'max_drones')
                         for i in range(len(metadata)):
-                            if (metadata[i] == 'color'):
-                                color = metadata[i + 1]
-                            else:
-                                color = 'NONE'
-                            if (metadata[i] == 'zone'):
-                                zone = metadata[i + 1]
-                            else:
-                                zone = 'normal'
-                            if (metadata[i] == 'max_drones'):
-                                max_drones = int(metadata[i + 1])
-                            else:
-                                max_drones = 1
+                            if (metadata[i] in tup):
+                                setattr(meta,
+                                        metadata[i].upper(),
+                                        metadata[i + 1]
+                                        )
                     if (key != 'connection'):
                         coords: tuple[int, int] = (int(part[1]), int(part[2]))
-                        node: Node = Node(VALUE=coords,
-                                          META=MetaData(
-                                              MAX_DRONES=max_drones,
-                                              ZONE=zone,
-                                              COLOR=color)
-                                          )
+                        node: Node = Node(VALUE=coords, META=meta)
                         self.nodes[part[0]] = node
                     if (key == 'start_hub'):
                         self.start = node.VALUE
@@ -138,9 +128,6 @@ class Generator(BaseModel):
                         a, b = value.split('-')
                         self.nodes[a].connect(self.nodes[b])
                         self.nodes[b].connect(self.nodes[a])
-                    color = 'NONE'
-                    zone = 'normal'
-                    max_drones = 1
             except IndexError:
                 self.form.putstr(
                         self.form.colored('\n# INVALID PARAM', self.colors.RED),
