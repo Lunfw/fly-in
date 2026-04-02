@@ -9,7 +9,6 @@ class MetaData(BaseModel):
     COLOR: str = Field(default='NONE')
     MAX_DRONES: int = Field(default=1, ge=0)
     form: Format = Field(default=Format())
-    colors: Colors = Field(default=Colors())
 
     @model_validator(mode='after')
     def validate_zone(self) -> Self:
@@ -20,7 +19,7 @@ class MetaData(BaseModel):
                                                   )
         if (self.ZONE not in valid_zones):
             self.form.putstr(
-                    self.form.colored('# INVALID ZONE', self.colors.RED),
+                    self.form.colored('# INVALID ZONE', 'RED'),
                     stderr)
             self.ZONE = 'normal'
         return (self)
@@ -28,10 +27,10 @@ class MetaData(BaseModel):
     @model_validator(mode='after')
     def validate_color(self) -> Self:
         self.COLOR = self.COLOR
-        valid_colors: List[str] = self.colors.get_colors()
+        valid_colors: List[str] = Colors().get_colors()
         if (self.COLOR not in valid_colors):
             self.form.putstr(
-                    self.form.colored('\n# INVALID COLOR', self.colors.RED),
+                    self.form.colored('\n# INVALID COLOR', 'RED'),
                     stderr)
             self.COLOR = 'NONE'
         return (self)
@@ -40,7 +39,7 @@ class MetaData(BaseModel):
     def validate_drones(self) -> Self:
         if (self.MAX_DRONES <= 0):
             self.form.putstr(
-                    self.form.colored('\n# NB_DRONES < 0', self.colors.RED),
+                    self.form.colored('\n# NB_DRONES < 0', 'RED'),
                     stderr)
             self.MAX_DRONES = 1
         return (self)
@@ -51,7 +50,6 @@ class Node(BaseModel):
     VALUE: tuple[int, int] = Field(default=((0, 0)))
     META: MetaData = Field(default=MetaData())
     form: Format = Field(default=Format())
-    colors: Colors = Field(default=Colors())
 
     def connect(self, other: Self) -> None:
         self.ADJ.append(other)
@@ -60,7 +58,7 @@ class Node(BaseModel):
     def validate_self(self) -> Self:
         if (self.VALUE[0] < 0 or self.VALUE[0] < 0):
             self.form.putstr(
-                    self.form.colored('\n# INVALID NODE', self.colors.RED),
+                    self.form.colored('\n# INVALID NODE', 'RED'),
                     stderr)
             self.VALUE = (0, 0)
         return (self)

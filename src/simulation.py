@@ -73,7 +73,6 @@ class SimulationDisplay(BaseModel):
             stdout.write('\x1b[J')
             stdout.flush()
 
-        print(self.colors.WHITE)
         print('#   What to do with ', end='')
         print(self.colors.CYAN, end='')
         print(f'{filename}?')

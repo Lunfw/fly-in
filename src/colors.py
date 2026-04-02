@@ -30,6 +30,8 @@ class Format(BaseModel):
     '''
         Small lib for text formatting.
     '''
+    colors: Colors = Field(default=Colors())
+
     def centered(self, text: (List[str] | str), fd: IO[str] = stdout) -> None:
         width = get_terminal_size().columns
         if (type(text) is str):
@@ -83,7 +85,7 @@ class Format(BaseModel):
                 text: (List[str] | str),
                 color: str) -> str | List[str]:
         if (type(text) is str):
-            return (color + text + '\033[0m')
+            return (getattr(self.colors, color) + text + self.colors.RESET)
         for word in text:
-            word = color + word + '\033[0m'
+            word = getattr(self.colors, color) + word + self.colors.RESET
         return (text)
