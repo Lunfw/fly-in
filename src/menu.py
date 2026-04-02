@@ -67,7 +67,6 @@ class Menu(BaseModel):
         self.navigate(body, selected)
         while (True):
             key: str = self.get_key()
-
             if (key == '\x1b[A'):
                 if (selected == 0):
                     selected = 0

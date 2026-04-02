@@ -17,6 +17,7 @@ class Colors(BaseModel):
     CYAN: str = Field(default='\033[1;36m')
     WHITE: str = Field(default='\033[1;37m')
     GREY: str = Field(default='\033[1;90m')
+    ORANGE: str = Field(default='\033[1;91m')
     RESET: str = Field(default='\033[0m')
 
     def get_colors(self) -> List[str]:

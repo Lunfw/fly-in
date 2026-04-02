@@ -21,7 +21,6 @@ class SimulationDisplay(BaseModel):
         self.prompt_options(self.options, selected, filename)
         while (True):
             key: str = self.get_key()
-
             if (key == '\x1b[A'):
                 if (selected == 0):
                     selected = 0

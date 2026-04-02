@@ -5,17 +5,17 @@ from sys import stderr
 
 
 class MetaData(BaseModel):
-    ZONE: str = Field(default='normal')
+    ZONE: str = Field(default='NORMAL')
     COLOR: str = Field(default='NONE')
     MAX_DRONES: int = Field(default=1, ge=0)
-    MAX_LINK_CAPACITY: int = Field(default=1, ge=0)
+    MAX_LINK_CAPACITY: int = Field(default=0, ge=0)
 
     @model_validator(mode='after')
     def validate_zone(self) -> Self:
-        valid_zones: tuple[str, str, str, str] = ('normal',
-                                                  'blocked',
-                                                  'restricted',
-                                                  'priority'
+        valid_zones: tuple[str, str, str, str] = ('NORMAL',
+                                                  'BLOCKED',
+                                                  'RESTRICTED',
+                                                  'PRIORITY'
                                                   )
         if (self.ZONE not in valid_zones):
             Format().putstr(
@@ -37,7 +37,7 @@ class MetaData(BaseModel):
 
     @model_validator(mode='after')
     def validate_drones(self) -> Self:
-        if (self.MAX_DRONES <= 0):
+        if (self.MAX_DRONES < 0):
             Format().putstr(
                     Format().colored('\n# NB_DRONES < 0', 'RED'),
                     stderr)
@@ -46,7 +46,7 @@ class MetaData(BaseModel):
 
     @model_validator(mode='after')
     def validate_capacity(self) -> Self:
-        if (self.MAX_LINK_CAPACITY <= 0):
+        if (self.MAX_LINK_CAPACITY < 0):
             Format().putstr(
                     Format().colored('\n# CAPACITY < 0', 'RED'),
                     stderr)
@@ -112,7 +112,7 @@ class Generator(BaseModel):
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
                     meta: MetaData = MetaData()
                     if (key != 'connection' and len(part[3]) > 3):
-                        metadata: List[str] = part[3].split(' ')[1:-1]
+                        metadata: List[str] = part[3].strip('[]').split('=')
                         tup: tuple[str, str, str, str] = ('color',
                                                          'zone',
                                                          'max_drones',
@@ -122,7 +122,7 @@ class Generator(BaseModel):
                             if (metadata[i] in tup):
                                 setattr(meta,
                                         metadata[i].upper(),
-                                        metadata[i + 1]
+                                        metadata[i + 1].upper()
                                         )
                     if (key != 'connection'):
                         coords: tuple[int, int] = (int(part[1]), int(part[2]))
