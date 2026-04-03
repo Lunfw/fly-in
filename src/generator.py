@@ -1,6 +1,6 @@
 from src.colors import Colors, Format
 from pydantic import BaseModel, Field, model_validator
-from typing import List, Self
+from typing import List, Set, Self
 from sys import stderr
 
 
@@ -50,8 +50,17 @@ class Node(BaseModel):
     VALUE: tuple[int, int] = Field(default=((0, 0)))
     META: MetaData = Field(default=MetaData())
 
+    def __hash__(self) -> int:
+        return (hash(self.VALUE))
+
+    def __eq__(self, other: Self) -> bool:
+        if (not isinstance(other, Node)):
+            return (False)
+        return (self.VALUE == other.VALUE)
+
     def connect(self, other: Self) -> None:
         self.ADJ.append(other)
+
 
     @model_validator(mode='after')
     def validate_self(self) -> Self:
@@ -141,5 +150,15 @@ class Parser(BaseModel):
                 Format().putstr(
                         Format().colored('\n# INVALID PARAM', RED),
                         stderr)
-        self.debug()
+        Generator().dfs(self.nodes['start'])
         self.nodes = {}
+
+class Generator(BaseModel):
+    visited: Set[Node] = Field(default_factory=set) 
+
+    def dfs(self, node: Node) -> None:
+        self.visited.add(node)
+        for i in node.ADJ:
+            if (i not in self.visited):
+                self.visited.add(i)
+                self.dfs(i)

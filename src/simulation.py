@@ -103,4 +103,4 @@ class SimulationDisplay(BaseModel):
                 pass
             elif (key == '\x03'):
                 exit(0)
-        self.nav_lines = lines + 8
+        self.nav_lines = lines + 9
