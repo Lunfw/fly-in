@@ -45,6 +45,7 @@ class MetaData(BaseModel):
 
 
 class Node(BaseModel):
+    NAME: str = Field(default='')
     ADJ: (List[Self]) = Field(default=[])
     MAX_LINK: List[int] = Field(default=[])
     VALUE: tuple[int, int] = Field(default=((0, 0)))
@@ -133,6 +134,8 @@ class Parser(BaseModel):
                         coords: tuple[int, int] = (int(part[1]), int(part[2]))
                         node: Node = Node(VALUE=coords, META=meta)
                         self.nodes[part[0]] = node
+                        node.NAME = Format().colored(part[0].upper(),
+                                                     node.META.COLOR)
                     if (key == 'start_hub'):
                         self.start = node.VALUE
                     elif (key == 'end_hub'):
@@ -150,15 +153,28 @@ class Parser(BaseModel):
                 Format().putstr(
                         Format().colored('\n# INVALID PARAM', RED),
                         stderr)
+        Format().putstr('\n# MAPPED', stderr)
         Generator().dfs(self.nodes['start'])
         self.nodes = {}
 
 class Generator(BaseModel):
     visited: Set[Node] = Field(default_factory=set) 
 
-    def dfs(self, node: Node) -> None:
+    def dfs(self, node: Node, prefix: str = '', is_last: bool = True) -> None:
+        if (is_last):
+            connector = '└── '
+        else:
+            connector = '├── '
+
+        Format().putstr(f'{prefix}{connector}{node.NAME}')
+        prefix += '│   '
+
         self.visited.add(node)
-        for i in node.ADJ:
-            if (i not in self.visited):
-                self.visited.add(i)
-                self.dfs(i)
+        unvisited: List[Node] = [i for i in node.ADJ if i not in self.visited]
+        for j, child in enumerate(unvisited):
+            is_last_child: bool = (j == len(unvisited) - 1)
+            if (is_last):
+                extension = '    '
+            else:
+                extension = '│   '
+            self.dfs(child, prefix + extension, is_last_child)

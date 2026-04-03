@@ -14,6 +14,7 @@ class Colors(BaseModel):
     BLUE: str = Field(default='\033[1;34m')
     PURPLE: str = Field(default='\033[1;35m')
     CYAN: str = Field(default='\033[1;36m')
+    NONE: str = Field(default='\033[0m')
     RESET: str = Field(default='\033[0m')
 
     WHITE: str = Field(default='\033[1;37m')
@@ -110,9 +111,9 @@ class Format(BaseModel):
     def colored(text: (List[str] | str), color: str) -> str | List[str]:
         color: str = color.upper()
         if (type(text) is str):
-            return (getattr(self.colors, color) + text + Colors().RESET)
+            return (getattr(Colors(), color) + text + Colors().RESET)
         for word in text:
-            word = getattr(self.colors, color) + word + Colors().RESET
+            word = getattr(Colors(), color) + word + Colors().RESET
         return (text)
 
     def draw_margin(self) -> None:
