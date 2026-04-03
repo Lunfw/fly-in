@@ -37,7 +37,13 @@ class SimulationDisplay(BaseModel):
             elif (self.options[selected] == 'Generate' and key == '\r'):
                 self.options.pop(selected)
                 self.first_draw = True
+                self.options.append('View in Real Time')
                 self.generator.receive(f'maps/{filename}')
+            elif (self.options[selected] == 'View in Real Time' and key == '\r'):
+                self.options.pop(selected)
+                self.nav_lines -= 7
+                pass
+                # self.generator.run()
             elif (self.options[selected] == 'Close' and key == '\r'):
                 self.options = ['Open', 'Generate', 'Close']
                 self.first_draw = True
@@ -103,4 +109,4 @@ class SimulationDisplay(BaseModel):
                 pass
             elif (key == '\x03'):
                 exit(0)
-        self.nav_lines = lines + 9
+        self.nav_lines = lines + 8
