@@ -63,7 +63,7 @@ class Node(BaseModel):
         return (self)
 
 
-class Generator(BaseModel):
+class Parser(BaseModel):
     file: str = Field(default='')
     buffer: str = Field(default='')
     start: tuple[int, int] = Field(default=(0, 0))

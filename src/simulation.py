@@ -1,5 +1,5 @@
 from src.colors import Colors, Format
-from src.generator import Generator
+from src.generator import Parser
 from sys import stdin, stdout
 from tty import setraw
 from termios import tcgetattr, tcsetattr, TCSADRAIN
@@ -14,7 +14,7 @@ class SimulationDisplay(BaseModel):
     first_draw: bool = Field(default=True)
     nav_lines: int = Field(default=0)
     options: List[str] = Field(default=['Open', 'Generate', 'Close'])
-    generator: Generator = Field(default=Generator())
+    generator: Parser = Field(default=Parser())
 
     def prompt(self, filename: str) -> None:
         selected: int = 0

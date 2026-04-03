@@ -1,24 +1,51 @@
 from pydantic import BaseModel, Field
 from shutil import get_terminal_size
 from sys import stdout
-from typing import IO, List
+from typing import IO, List, Callable
 
 
 class Colors(BaseModel):
     '''
         A small library for color codes and such.
     '''
-    BLACK: str = Field(default='\033[1;30m')
     RED: str = Field(default='\033[1;31m')
     GREEN: str = Field(default='\033[1;32m')
     YELLOW: str = Field(default='\033[1;33m')
     BLUE: str = Field(default='\033[1;34m')
     PURPLE: str = Field(default='\033[1;35m')
     CYAN: str = Field(default='\033[1;36m')
-    WHITE: str = Field(default='\033[1;37m')
-    GREY: str = Field(default='\033[1;90m')
-    ORANGE: str = Field(default='\033[1;91m')
     RESET: str = Field(default='\033[0m')
+
+    WHITE: str = Field(default='\033[1;37m')
+    BLACK: str = Field(default='\033[1;30m')
+    GREY: str = Field(default='\033[1;90m')
+
+    MAROON: str = Field(default='\033[38;5;88m')
+    ORANGE: str = Field(default='\033[38;5;214m')
+    DARKRED: str = Field(default='\033[38;5;52m')
+    CRIMSON: str = Field(default='\033[38;5;160m')
+    BROWN: str = Field(default='\033[38;5;130m')
+    GOLD: str = Field(default='\033[38;5;220m')
+    VIOLET: str = Field(default='\033[38;5;135m')
+    DARKGREY: str = Field(default='\033[38;5;240m')
+
+    @property
+    def RAINBOW(self) -> Callable:
+        def _rainbow(message: List[str] | str) -> str | List[str]:
+            colors = [k for k in Colors.model_fields.keys()]
+            if (type(message) is str):
+                result = ''
+                for i, char in enumerate(message):
+                    result += getattr(self, colors[i % len(colors)]) + char
+                return (result + self.RESET)
+            result: List[str] = []
+            for line in message:
+                temp = ''
+                for i, char in enumerate(line):
+                    temp += getattr(self, colors[i % len(colors)]) + char
+                result.append(temp + self.RESET)
+            return (result)
+        return (_rainbow)
 
     def get_colors(self) -> List[str]:
         temp: List[str] = ['NONE']
@@ -33,7 +60,8 @@ class Format(BaseModel):
     '''
     colors: Colors = Field(default=Colors())
 
-    def centered(self, text: (List[str] | str), fd: IO[str] = stdout) -> None:
+    @staticmethod
+    def centered(text: (List[str] | str), fd: IO[str] = stdout) -> None:
         width = get_terminal_size().columns
         if (type(text) is str):
             print(text.center(width), file=fd, flush=True)
@@ -41,14 +69,16 @@ class Format(BaseModel):
         for line in text:
             print(line.center(width), file=fd, flush=True)
 
-    def putstr(self, text: (List[str] | str), fd: IO[str] = stdout) -> None:
+    @staticmethod
+    def putstr(text: (List[str] | str), fd: IO[str] = stdout) -> None:
         if (type(text) is str):
             print(text, file=fd)
             return
         for word in text:
             print(word, file=fd)
 
-    def listing(self, text: (List[str] | str),
+    @staticmethod
+    def listing(text: (List[str] | str),
                 marker: str = ' ') -> str | List[str]:
         temp: List[str] = []
         if (type(text) is str):
@@ -63,7 +93,8 @@ class Format(BaseModel):
             temp.append(f'[{marker}]    ->  ' + line)
         return (temp)
 
-    def ls(self, text: (List[str] | str)) -> str | List[str]:
+    @staticmethod
+    def ls(text: (List[str] | str)) -> str | List[str]:
         temp: List[str] = []
         if (type(text) is str):
             return (text)
@@ -74,6 +105,16 @@ class Format(BaseModel):
                 temp.append(text[line])
         return (temp)
 
+
+    @staticmethod
+    def colored(text: (List[str] | str), color: str) -> str | List[str]:
+        color: str = color.upper()
+        if (type(text) is str):
+            return (getattr(self.colors, color) + text + Colors().RESET)
+        for word in text:
+            word = getattr(self.colors, color) + word + Colors().RESET
+        return (text)
+
     def draw_margin(self) -> None:
         width = get_terminal_size().columns
         margin = '\033[1;90m' + '|< '
@@ -81,12 +122,3 @@ class Format(BaseModel):
             margin += '='
         margin += ' >|' + '\033[0m'
         self.centered(margin)
-
-    def colored(self,
-                text: (List[str] | str),
-                color: str) -> str | List[str]:
-        if (type(text) is str):
-            return (getattr(self.colors, color) + text + self.colors.RESET)
-        for word in text:
-            word = getattr(self.colors, color) + word + self.colors.RESET
-        return (text)
