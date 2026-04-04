@@ -1,6 +1,6 @@
 from src.colors import Colors, Format
 from pydantic import BaseModel, Field, model_validator
-from typing import List, Set, Self
+from typing import List, Set, Self, Any
 from sys import stderr
 
 
@@ -54,14 +54,13 @@ class Node(BaseModel):
     def __hash__(self) -> int:
         return (hash(self.VALUE))
 
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other: object) -> bool:
         if (not isinstance(other, Node)):
             return (False)
         return (self.VALUE == other.VALUE)
 
     def connect(self, other: Self) -> None:
         self.ADJ.append(other)
-
 
     @model_validator(mode='after')
     def validate_self(self) -> Self:
@@ -114,12 +113,12 @@ class Parser(BaseModel):
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
                     meta: MetaData = MetaData()
                     if (key != 'connection' and len(part[3]) > 3):
-                        metadata: List[str] = '='.join(part[3:]).strip('[]')
+                        metadata: Any[str] = '='.join(part[3:]).strip('[]')
                         metadata = metadata.split('=')
-                        tup: tuple[str, str, str, str] = ('color',
-                                                         'zone',
-                                                         'max_drones',
-                                                         )
+                        tup: tuple[str, str, str] = ('color',
+                                                     'zone',
+                                                     'max_drones',
+                                                     )
                         for i in range(len(metadata)):
                             if (metadata[i] in tup):
                                 if (metadata[i + 1].isdigit()):
@@ -143,6 +142,7 @@ class Parser(BaseModel):
                     elif (key == 'connection'):
                         a, b = value.split('-')
                         if (' ' in b):
+                            tmp: Any
                             b, tmp = b.split(' ', 1)
                             tmp = int(tmp.strip('[]').split('=')[1])
                             self.nodes[a].MAX_LINK.append(int(tmp))
@@ -151,14 +151,15 @@ class Parser(BaseModel):
                         self.nodes[b].connect(self.nodes[a])
             except IndexError:
                 Format().putstr(
-                        Format().colored('\n# INVALID PARAM', RED),
+                        Format().colored('\n# INVALID PARAM', 'RED'),
                         stderr)
         Format().putstr('\n# MAPPED', stderr)
         Generator().dfs(self.nodes['start'])
         self.nodes = {}
 
+
 class Generator(BaseModel):
-    visited: Set[Node] = Field(default_factory=set) 
+    visited: Set[Node] = Field(default_factory=set)
 
     def dfs(self, node: Node, prefix: str = '', is_last: bool = True) -> None:
         if (is_last):

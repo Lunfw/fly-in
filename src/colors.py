@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from shutil import get_terminal_size
 from sys import stdout
-from typing import IO, List, Callable
+from typing import IO, List, Callable, Any
 
 
 class Colors(BaseModel):
@@ -31,21 +31,21 @@ class Colors(BaseModel):
     DARKGREY: str = Field(default='\033[38;5;240m')
 
     @property
-    def RAINBOW(self) -> Callable:
-        def _rainbow(message: List[str] | str) -> str | List[str]:
+    def RAINBOW(self) -> Callable[[List[str] | str], str | List[str]]:
+        def _rainbow(message: (List[str] | str)) -> str | List[str]:
             colors = [k for k in Colors.model_fields.keys()]
             if (type(message) is str):
-                result = ''
+                result: str = ''
                 for i, char in enumerate(message):
                     result += getattr(self, colors[i % len(colors)]) + char
                 return (result + self.RESET)
-            result: List[str] = []
+            Lresult: List[str] = []
             for line in message:
                 temp = ''
                 for i, char in enumerate(line):
                     temp += getattr(self, colors[i % len(colors)]) + char
-                result.append(temp + self.RESET)
-            return (result)
+                Lresult.append(temp + self.RESET)
+            return (Lresult)
         return (_rainbow)
 
     def get_colors(self) -> List[str]:
@@ -106,10 +106,9 @@ class Format(BaseModel):
                 temp.append(text[line])
         return (temp)
 
-
     @staticmethod
-    def colored(text: (List[str] | str), color: str) -> str | List[str]:
-        color: str = color.upper()
+    def colored(text: (List[str] | str), color: str) -> Any:
+        color = color.upper()
         if (type(text) is str):
             return (getattr(Colors(), color) + text + Colors().RESET)
         for word in text:
