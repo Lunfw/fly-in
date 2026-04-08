@@ -21,6 +21,8 @@ class Colors(BaseModel):
     BLACK: str = Field(default='\033[1;30m')
     GREY: str = Field(default='\033[1;90m')
 
+    MAGENTA: str = Field(default='\033[38;5;198m')
+    LIME: str = Field(default='\033[38;5;154m')
     MAROON: str = Field(default='\033[38;5;88m')
     ORANGE: str = Field(default='\033[38;5;214m')
     DARKRED: str = Field(default='\033[38;5;52m')
@@ -49,10 +51,9 @@ class Colors(BaseModel):
         return (_rainbow)
 
     def get_colors(self) -> List[str]:
+        exclude = ['RESET', 'RAINBOW']
         temp: List[str] = ['NONE']
-        for i in self.model_fields.keys():
-            temp.append(i)
-        return (temp)
+        return [i for i in Colors.model_fields.keys() if i not in exclude]
 
 
 class Format(BaseModel):

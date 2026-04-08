@@ -1,6 +1,7 @@
 from src.colors import Colors, Format
 from pydantic import BaseModel, Field, model_validator
 from typing import List, Set, Self, Any
+from datetime import datetime
 from sys import stderr
 
 
@@ -71,6 +72,61 @@ class Node(BaseModel):
             self.VALUE = (0, 0)
         return (self)
 
+class Logger(BaseModel):
+    logs: List[str] = Field(default_factory=list)
+    form: Format = Field(default=Format())
+
+    def log(self, message: str) -> None:
+        timestamp: str = datetime.now().strftime('%H:%M:%S')
+        entry = f'[{timestamp}] {message}'
+        self.logs.append(entry)
+        print(entry)
+
+
+class Generator(BaseModel):
+    visited: Set[Node] = Field(default_factory=set)
+    logger: Logger = Field(default=Logger())
+
+    def reset(self) -> None:
+        self.visited.clear()
+        self.logger.logs.clear()
+
+    def dfs(self, node: Node, prefix: str = '', is_last: bool = True) -> None:
+        if (is_last):
+            connector = '└── '
+        else:
+            connector = '├── '
+
+        Format().putstr(f'{prefix}{connector}{node.NAME}')
+        prefix += '│   '
+
+        self.visited.add(node)
+        unvisited: List[Node] = [i for i in node.ADJ if i not in self.visited]
+        for j, child in enumerate(unvisited):
+            is_last_child: bool = (j == len(unvisited) - 1)
+            if (is_last):
+                extension = '    '
+            else:
+                extension = '│   '
+            self.dfs(child, prefix + extension, is_last_child)
+
+    def bfs(self, start: Node) -> None:
+        from collections import deque
+
+        self.visited.clear()
+        self.visited.add(start)
+        queue: deque[Node] = deque([start])
+        while (queue):
+            node = queue.popleft()
+            self.logger.log(f'VISITING: {node.NAME} at {node.VALUE}')
+
+            for adj in node.ADJ:
+                if (adj not in self.visited):
+                    self.visited.add(adj)
+                    self.logger.log(f'QUEUED: {adj.NAME} at {adj.VALUE}')
+                    queue.append(adj)
+        self.logger.log('BFS complete')
+
 
 class Parser(BaseModel):
     file: str = Field(default='')
@@ -79,6 +135,7 @@ class Parser(BaseModel):
     goal: tuple[int, int] = Field(default=(0, 0))
     nodes: dict[str, Node] = Field(default={})
     nb_drones: int = Field(default=0)
+    generator: Generator = Field(default=Generator())
 
     def debug(self) -> None:
         print(f'\nFILENAME: {self.file}')
@@ -93,14 +150,14 @@ class Parser(BaseModel):
             print(f'    ->| MAX_LINK: {i.MAX_LINK}')
         print('')
 
-    def receive(self, filename: str) -> None:
+    def receive(self, filename: str, code: str = 'dfs') -> None:
         with open(filename, 'r') as f:
             self.buffer = f.read()
             self.file = filename
         f.close()
-        self.parser()
+        self.parser(code)
 
-    def parser(self) -> None:
+    def parser(self, code: str) -> None:
         for line in self.buffer.split('\n'):
             line = line.strip()
             if (not line or line.startswith('#') or ': ' not in line):
@@ -153,29 +210,13 @@ class Parser(BaseModel):
                 Format().putstr(
                         Format().colored('\n# INVALID PARAM', 'RED'),
                         stderr)
-        Format().putstr('\n# MAPPED', stderr)
-        Generator().dfs(self.nodes['start'])
+        if (code == 'dfs'):
+            Format().putstr('\n# MAPPED', stderr)
+            self.generator.dfs(self.nodes['start'])
+        else:
+            Format().putstr('\n# SOLVED', stderr)
+            self.generator.bfs(self.nodes['start'])
+        self.generator.reset()
         self.nodes = {}
 
 
-class Generator(BaseModel):
-    visited: Set[Node] = Field(default_factory=set)
-
-    def dfs(self, node: Node, prefix: str = '', is_last: bool = True) -> None:
-        if (is_last):
-            connector = '└── '
-        else:
-            connector = '├── '
-
-        Format().putstr(f'{prefix}{connector}{node.NAME}')
-        prefix += '│   '
-
-        self.visited.add(node)
-        unvisited: List[Node] = [i for i in node.ADJ if i not in self.visited]
-        for j, child in enumerate(unvisited):
-            is_last_child: bool = (j == len(unvisited) - 1)
-            if (is_last):
-                extension = '    '
-            else:
-                extension = '│   '
-            self.dfs(child, prefix + extension, is_last_child)
