@@ -52,7 +52,6 @@ class Colors(BaseModel):
 
     def get_colors(self) -> List[str]:
         exclude = ['RESET', 'RAINBOW']
-        temp: List[str] = ['NONE']
         return [i for i in Colors.model_fields.keys() if i not in exclude]
 
 

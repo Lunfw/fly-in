@@ -50,6 +50,7 @@ class Node(BaseModel):
     ADJ: (List[Self]) = Field(default=[])
     MAX_LINK: List[int] = Field(default=[])
     VALUE: tuple[int, int] = Field(default=((0, 0)))
+    DRONE_COUNT: int = Field(default=0)
     META: MetaData = Field(default=MetaData())
 
     def __hash__(self) -> int:
@@ -72,13 +73,14 @@ class Node(BaseModel):
             self.VALUE = (0, 0)
         return (self)
 
+
 class Logger(BaseModel):
     logs: List[str] = Field(default_factory=list)
     form: Format = Field(default=Format())
 
     def log(self, message: str) -> None:
         timestamp: str = datetime.now().strftime('%H:%M:%S')
-        entry = f'[{timestamp}] {message}'
+        entry = f'| [{timestamp}] {message}'
         self.logs.append(entry)
         print(entry)
 
@@ -110,22 +112,37 @@ class Generator(BaseModel):
                 extension = '│   '
             self.dfs(child, prefix + extension, is_last_child)
 
-    def bfs(self, start: Node) -> None:
+    def bfs(self, start: Node, goal: Node) -> List[Node]:
         from collections import deque
 
         self.visited.clear()
         self.visited.add(start)
         queue: deque[Node] = deque([start])
+        parent: dict[Node, Node | None] = {start: None}
         while (queue):
             node = queue.popleft()
             self.logger.log(f'VISITING: {node.NAME} at {node.VALUE}')
 
+            if (node == goal):
+                break
             for adj in node.ADJ:
                 if (adj not in self.visited):
                     self.visited.add(adj)
+                    parent[adj] = node
                     self.logger.log(f'QUEUED: {adj.NAME} at {adj.VALUE}')
                     queue.append(adj)
+        path: List[Node] = []
+        current: Node | None = goal
+        while (current is not None):
+            path.append(current)
+            current = parent.get(current)
+        path.reverse()
         self.logger.log('BFS complete')
+        return (path)
+
+    def solve(self, start: Node) -> None:
+        while (True):
+            ...
 
 
 class Parser(BaseModel):
@@ -211,12 +228,16 @@ class Parser(BaseModel):
                         Format().colored('\n# INVALID PARAM', 'RED'),
                         stderr)
         if (code == 'dfs'):
-            Format().putstr('\n# MAPPED', stderr)
+            Format().putstr('\n# MAPPED')
             self.generator.dfs(self.nodes['start'])
         else:
-            Format().putstr('\n# SOLVED', stderr)
-            self.generator.bfs(self.nodes['start'])
+            Format().putstr('\n# SOLVED')
+            path = self.generator.bfs(self.nodes['start'], self.nodes['goal'])
+            print('\n# PATH:', end='\n| ')
+            for j in path:
+                print(j.NAME, end='')
+                if (j != path[-1]):
+                    print(' -> ', end='')
+            Format().putstr('\n')
         self.generator.reset()
         self.nodes = {}
-
-

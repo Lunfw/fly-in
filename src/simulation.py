@@ -43,8 +43,8 @@ class SimulationDisplay(BaseModel):
             elif (self.options[selected] == 'View in Real Time' and
                   key == '\r'):
                 self.options.pop(selected)
-                self.nav_lines -= 7
-                self.generator.receive(f'maps/{filename}','bfs')
+                self.nav_lines -= 8
+                self.generator.receive(f'maps/{filename}', 'bfs')
                 selected = 0
             elif (self.options[selected] == 'Close' and key == '\r'):
                 self.options = ['Open', 'Generate', 'Close']
