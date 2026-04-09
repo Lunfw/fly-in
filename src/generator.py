@@ -175,24 +175,11 @@ class Generator(BaseModel):
 class Parser(BaseModel):
     file: str = Field(default='')
     buffer: str = Field(default='')
-    start: tuple[int, int] = Field(default=(0, 0))
-    goal: tuple[int, int] = Field(default=(0, 0))
+    start: str = Field(default='start')
+    goal: str = Field(default='goal')
     nodes: dict[str, Node] = Field(default={})
     nb_drones: int = Field(default=0)
     generator: Generator = Field(default=Generator())
-
-    def debug(self) -> None:
-        print(f'\nFILENAME: {self.file}')
-        print(f'START: {self.start}')
-        print(f'GOAL: {self.goal}')
-        print(f'NB_DRONES: {self.nb_drones}')
-        print('NODES:')
-        for i in list(self.nodes.values()):
-            print(f'\n#   {i.VALUE} | [{i.META}]')
-            for j in i.ADJ:
-                print(f'    ->| {j.VALUE}')
-            print(f'    ->| MAX_LINK: {i.MAX_LINK}')
-        print('')
 
     def receive(self, filename: str, code: str = 'dfs') -> None:
         with open(filename, 'r') as f:
@@ -241,9 +228,9 @@ class Parser(BaseModel):
                         node.NAME = Format().colored(part[0].upper(),
                                                      node.META.COLOR)
                     if (key == 'start_hub'):
-                        self.start = node.VALUE
+                        self.start = part[0]
                     elif (key == 'end_hub'):
-                        self.goal = node.VALUE
+                        self.goal = part[0]
                     elif (key == 'connection'):
                         a, b = value.split('-')
                         if (' ' in b):
@@ -260,10 +247,12 @@ class Parser(BaseModel):
                         stderr)
         if (code == 'dfs'):
             Format().putstr('\n# MAPPED')
-            self.generator.dfs(self.nodes['start'])
+            self.generator.dfs(self.nodes[self.start])
         else:
             Format().putstr('\n# SOLVED')
-            path = self.generator.bfs(self.nodes['start'], self.nodes['goal'])
+            path = self.generator.bfs(self.nodes[self.start],
+                                      self.nodes[self.goal]
+                                      )
             path[0].DRONE_COUNT = self.nb_drones
             print('\n# PATH:', end='\n| ')
             for j in path:

@@ -35,7 +35,8 @@ class Colors(BaseModel):
     @property
     def RAINBOW(self) -> Callable[[List[str] | str], str | List[str]]:
         def _rainbow(message: (List[str] | str)) -> str | List[str]:
-            colors = [k for k in Colors.model_fields.keys()]
+            ex = {'RESET', 'NONE', 'BLACK', 'WHITE', 'GREY', 'DARKGREY'}
+            colors = [k for k in Colors.model_fields.keys() if k not in ex]
             if (type(message) is str):
                 result: str = ''
                 for i, char in enumerate(message):
@@ -51,8 +52,10 @@ class Colors(BaseModel):
         return (_rainbow)
 
     def get_colors(self) -> List[str]:
-        exclude = ['RESET', 'RAINBOW']
-        return [i for i in Colors.model_fields.keys() if i not in exclude]
+        exclude = ['RESET']
+        temp: List[str] = ['RAINBOW']
+        temp += [i for i in Colors.model_fields.keys() if i not in exclude]
+        return (temp)
 
 
 class Format(BaseModel):
@@ -109,6 +112,9 @@ class Format(BaseModel):
     @staticmethod
     def colored(text: (List[str] | str), color: str) -> Any:
         color = color.upper()
+        colors = Colors()
+        if (color == 'RAINBOW'):
+            return (colors.RAINBOW(text))
         if (type(text) is str):
             return (getattr(Colors(), color) + text + Colors().RESET)
         for word in text:
