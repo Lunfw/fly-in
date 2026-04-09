@@ -107,8 +107,6 @@ class SimulationDisplay(BaseModel):
             key: str = self.get_key()
             if (key == 'R' or key == 'r'):
                 break
-            elif (key == 'E' or key == 'e'):
-                pass
             elif (key == '\x03'):
                 exit(0)
         self.nav_lines = lines + 7
