@@ -8,7 +8,7 @@ from sys import stderr
 class MetaData(BaseModel):
     ZONE: str = Field(default='NORMAL')
     COLOR: str = Field(default='NONE')
-    MAX_DRONES: int = Field(default=1, ge=0)
+    MAX_DRONES: int = Field(default=0, ge=0)
 
     @model_validator(mode='after')
     def validate_zone(self) -> Self:
@@ -140,9 +140,36 @@ class Generator(BaseModel):
         self.logger.log('BFS complete')
         return (path)
 
-    def solve(self, start: Node) -> None:
-        while (True):
-            ...
+    def solve(self, path: List[Node]) -> None:
+        start = datetime.now()
+        max_count: int = path[0].DRONE_COUNT
+        self.logger.log('# TRAVELING...')
+        turn: int = 0
+        while (path[-1].DRONE_COUNT != max_count):
+            snapshot: List[int] = [node.DRONE_COUNT for node in path]
+            for i in range(len(path) - 1, 0, -1):
+                current: Node = path[i - 1]
+                plus: Node = path[i]
+                send: int = current.DRONE_COUNT
+                receive: int = plus.META.MAX_DRONES - snapshot[i]
+
+                if (current.MAX_LINK and i - 1 < len(current.MAX_LINK)):
+                    send = min(send, current.MAX_LINK[i - 1])
+
+                move: int = min(send, receive)
+                if (move > 0):
+                    current.DRONE_COUNT -= move
+                    plus.DRONE_COUNT += move
+                    self.logger.log(
+                            f'# STEP: {move} of {current.NAME} '
+                            f'({current.DRONE_COUNT})'
+                            f' -> {plus.NAME} ({plus.DRONE_COUNT})'
+                            )
+            turn += 1
+        end = datetime.now()
+        elapsed = (end - start).total_seconds() * 1000
+        self.logger.log(f'# DONE: {max_count} drones traveled to goal')
+        self.logger.log(f'# TURN COUNT: {turn} turns in {elapsed:.3f}ms')
 
 
 class Parser(BaseModel):
@@ -203,8 +230,12 @@ class Parser(BaseModel):
                                         metadata[i].upper(),
                                         metadata[i + 1]
                                         )
+                        if (not meta.MAX_DRONES):
+                            meta.MAX_DRONES = self.nb_drones
                     if (key != 'connection'):
                         coords: tuple[int, int] = (int(part[1]), int(part[2]))
+                        if (not meta.MAX_DRONES):
+                            meta.MAX_DRONES = self.nb_drones
                         node: Node = Node(VALUE=coords, META=meta)
                         self.nodes[part[0]] = node
                         node.NAME = Format().colored(part[0].upper(),
@@ -233,11 +264,14 @@ class Parser(BaseModel):
         else:
             Format().putstr('\n# SOLVED')
             path = self.generator.bfs(self.nodes['start'], self.nodes['goal'])
+            path[0].DRONE_COUNT = self.nb_drones
             print('\n# PATH:', end='\n| ')
             for j in path:
                 print(j.NAME, end='')
                 if (j != path[-1]):
                     print(' -> ', end='')
-            Format().putstr('\n')
+            Format().putstr('')
+            if (path):
+                self.generator.solve(path)
         self.generator.reset()
         self.nodes = {}
