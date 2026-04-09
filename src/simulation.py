@@ -101,12 +101,11 @@ class SimulationDisplay(BaseModel):
         lines: int = buffer.count('\n')
         print('\n' + buffer)
         sleep(2)
-        print(f'[{self.colors.RED}R{self.colors.RESET}]eturn    -   ', end='')
-        print(f'[{self.colors.CYAN}E{self.colors.RESET}]dit')
+        print(f'[{self.colors.RED}R{self.colors.RESET}]eturn')
         while (True):
             key: str = self.get_key()
             if (key == 'R' or key == 'r'):
                 break
             elif (key == '\x03'):
                 exit(0)
-        self.nav_lines = lines + 7
+        self.nav_lines = lines + 8
