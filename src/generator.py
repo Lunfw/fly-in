@@ -131,7 +131,7 @@ class Generator(BaseModel):
 
             if (node == goal):
                 break
-            
+ 
             for adj in node.ADJ:
                 zone_cost = PRIORITIES.get(adj.META.ZONE)
                 if (zone_cost is None):
@@ -149,7 +149,7 @@ class Generator(BaseModel):
             path.append(current)
             current = parent.get(current)
         path.reverse()
-        
+
         if (not path or path[0] != start):
             Format().putstr(Format().colored('\n# NO PATH', 'RED'), stderr)
             return []
