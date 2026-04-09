@@ -80,7 +80,7 @@ class Logger(BaseModel):
 
     def log(self, message: str) -> None:
         timestamp: str = datetime.now().strftime('%H:%M:%S')
-        entry = f'| [{timestamp}] {message}'
+        entry = f'│ [{timestamp}] {message}'
         self.logs.append(entry)
         print(entry)
 
@@ -112,32 +112,49 @@ class Generator(BaseModel):
                 extension = '│   '
             self.dfs(child, prefix + extension, is_last_child)
 
-    def bfs(self, start: Node, goal: Node) -> List[Node]:
-        from collections import deque
+    def dij(self, start: Node, goal: Node) -> List[Node]:
+        from heapq import heappop, heappush
 
-        self.visited.clear()
-        self.visited.add(start)
-        queue: deque[Node] = deque([start])
+        PRIORITIES: dict[str, int | None] = {
+                'NORMAL': 1,
+                'BLOCKED': None,
+                'RESTRICTED': 2,
+                'PRIORITY': 0,
+                }
+        dist: dict[Node, int] = {start: 0}
         parent: dict[Node, Node | None] = {start: None}
-        while (queue):
-            node = queue.popleft()
-            self.logger.log(f'VISITING: {node.NAME} at {node.VALUE}')
+        heap: List[tuple[int, int, Node]] = [(0, id(start), start)]
+
+        while (heap):
+            c, _, node = heappop(heap)
+            self.logger.log(f'# VISITING: {node.NAME} at {node.VALUE} ({c})')
 
             if (node == goal):
                 break
+            
             for adj in node.ADJ:
-                if (adj not in self.visited):
-                    self.visited.add(adj)
+                zone_cost = PRIORITIES.get(adj.META.ZONE)
+                if (zone_cost is None):
+                    continue
+                new_cost = c + zone_cost
+                if (adj not in dist or new_cost < dist[adj]):
+                    dist[adj] = new_cost
                     parent[adj] = node
-                    self.logger.log(f'QUEUED: {adj.NAME} at {adj.VALUE}')
-                    queue.append(adj)
+                    self.logger.log(f'# QUEUED: {adj.NAME}')
+                    heappush(heap, (new_cost, id(adj), adj))
+
         path: List[Node] = []
         current: Node | None = goal
         while (current is not None):
             path.append(current)
             current = parent.get(current)
         path.reverse()
-        self.logger.log('BFS complete')
+        
+        if (not path or path[0] != start):
+            Format().putstr(Format().colored('\n# NO PATH', 'RED'), stderr)
+            return []
+
+        self.logger.log(f'# PATH COST: {dist.get(goal, -1)}')
         return (path)
 
     def solve(self, path: List[Node]) -> None:
@@ -155,6 +172,9 @@ class Generator(BaseModel):
 
                 if (current.MAX_LINK and i - 1 < len(current.MAX_LINK)):
                     send = min(send, current.MAX_LINK[i - 1])
+
+                if (current.META.ZONE == 'RESTRICTED'):
+                    turn += 1
 
                 move: int = min(send, receive)
                 if (move > 0):
@@ -250,11 +270,13 @@ class Parser(BaseModel):
             self.generator.dfs(self.nodes[self.start])
         else:
             Format().putstr('\n# SOLVED')
-            path = self.generator.bfs(self.nodes[self.start],
+            path = self.generator.dij(self.nodes[self.start],
                                       self.nodes[self.goal]
                                       )
+            if (not len(path)):
+                return
             path[0].DRONE_COUNT = self.nb_drones
-            print('\n# PATH:', end='\n| ')
+            print('\n# PATH:', end='\n│ ')
             for j in path:
                 print(j.NAME, end='')
                 if (j != path[-1]):
