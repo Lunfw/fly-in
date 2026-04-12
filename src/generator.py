@@ -2,7 +2,8 @@ from src.colors import Colors, Format
 from pydantic import BaseModel, Field, model_validator
 from typing import List, Set, Self, Any
 from datetime import datetime
-from sys import stderr
+from time import sleep
+from sys import stderr, stdout
 
 
 class MetaData(BaseModel):
@@ -48,7 +49,7 @@ class MetaData(BaseModel):
 class Node(BaseModel):
     NAME: str = Field(default='')
     ADJ: (List[Self]) = Field(default=[])
-    MAX_LINK: List[int] = Field(default=[])
+    MAX_LINK: dict[tuple[int, int], int] = Field(default={})
     VALUE: tuple[int, int] = Field(default=((0, 0)))
     DRONE_COUNT: int = Field(default=0)
     META: MetaData = Field(default=MetaData())
@@ -61,8 +62,10 @@ class Node(BaseModel):
             return (False)
         return (self.VALUE == other.VALUE)
 
-    def connect(self, other: Self) -> None:
+    def connect(self, other: Self, capacity: int = 0) -> None:
         self.ADJ.append(other)
+        if (capacity):
+            self.MAX_LINK[other.VALUE] = capacity
 
     @model_validator(mode='after')
     def validate_self(self) -> Self:
@@ -88,10 +91,12 @@ class Logger(BaseModel):
 class Generator(BaseModel):
     visited: Set[Node] = Field(default_factory=set)
     logger: Logger = Field(default=Logger())
+    frame_lines: int = Field(default=0)
 
     def reset(self) -> None:
         self.visited.clear()
         self.logger.logs.clear()
+        self.frame_lines = 0
 
     def dfs(self, node: Node, prefix: str = '', is_last: bool = True) -> None:
         if (is_last):
@@ -157,21 +162,58 @@ class Generator(BaseModel):
         self.logger.log(f'# PATH COST: {dist.get(goal, -1)}')
         return (path)
 
-    def solve(self, path: List[Node]) -> None:
+    def render(self, path: List[Node]) -> None:
+        lines: List[str] = ['', '', '']
+        print('│        ', end='')
+
+        for i, node in enumerate(path):
+            label = f'{node.NAME}({node.DRONE_COUNT})'
+            if (i < len(path) - 1):
+                next_node = path[i + 1]
+                dx = next_node.VALUE[0] - node.VALUE[0]
+                dy = next_node.VALUE[1] - node.VALUE[1]
+
+                if dy == 0:
+                    lines[1] += label + ' ——— '
+                elif dy > 0:
+                    lines[1] += label
+                    lines[2] += ' ' * len(label) + '⧵'
+                elif dy < 0:
+                    lines[0] += ' ' * len(label) + '∕'
+                    lines[1] += label
+            else:
+                lines[1] += label
+
+        if self.frame_lines > 0:
+            stdout.write(f'\x1b[{self.frame_lines}A')
+            stdout.write('\x1b[J')
+            stdout.flush()
+
+        printed = 0
+        for line in lines:
+            if line.strip():
+                print(line)
+                printed += 1
+        self.frame_lines = printed
+        sleep(0.4)
+
+    def solve(self, path: List[Node], all_nodes: dict[str, Node]) -> None:
         start = datetime.now()
         max_count: int = path[0].DRONE_COUNT
         self.logger.log('# TRAVELING...')
         turn: int = 0
+        frames: List[tuple[List[str]]] = []
         while (path[-1].DRONE_COUNT != max_count):
             snapshot: List[int] = [node.DRONE_COUNT for node in path]
             for i in range(len(path) - 1, 0, -1):
                 current: Node = path[i - 1]
                 plus: Node = path[i]
-                send: int = current.DRONE_COUNT
+                send: int = snapshot[i - 1]
                 receive: int = plus.META.MAX_DRONES - snapshot[i]
 
-                if (current.MAX_LINK and i - 1 < len(current.MAX_LINK)):
-                    send = min(send, current.MAX_LINK[i - 1])
+                link_cap = current.MAX_LINK.get(plus.VALUE)
+                if (link_cap):
+                    send = min(send, link_cap)
 
                 if (current.META.ZONE == 'RESTRICTED'):
                     turn += 1
@@ -186,6 +228,13 @@ class Generator(BaseModel):
                             f' -> {plus.NAME} ({plus.DRONE_COUNT})'
                             )
             turn += 1
+
+            if (self.frame_lines > 0):
+                stdout.write(f'\x1b[{self.frame_lines}A')
+                stdout.write('\x1b[J')
+                stdout.flush()
+            self.render(path)
+            self.frame_lines = 1
         end = datetime.now()
         elapsed = (end - start).total_seconds() * 1000
         self.logger.log(f'# DONE: {max_count} drones traveled to goal')
@@ -253,14 +302,13 @@ class Parser(BaseModel):
                         self.goal = part[0]
                     elif (key == 'connection'):
                         a, b = value.split('-')
+                        capacity: int = 0
                         if (' ' in b):
                             tmp: Any
                             b, tmp = b.split(' ', 1)
-                            tmp = int(tmp.strip('[]').split('=')[1])
-                            self.nodes[a].MAX_LINK.append(int(tmp))
-                            self.nodes[b].MAX_LINK.append(int(tmp))
-                        self.nodes[a].connect(self.nodes[b])
-                        self.nodes[b].connect(self.nodes[a])
+                            capacity = int(tmp.strip('[]').split('=')[1])
+                        self.nodes[a].connect(self.nodes[b], capacity)
+                        self.nodes[b].connect(self.nodes[a], capacity)
             except IndexError:
                 Format().putstr(
                         Format().colored('\n# INVALID PARAM', 'RED'),
@@ -283,6 +331,6 @@ class Parser(BaseModel):
                     print(' -> ', end='')
             Format().putstr('')
             if (path):
-                self.generator.solve(path)
+                self.generator.solve(path, self.nodes)
         self.generator.reset()
         self.nodes = {}
