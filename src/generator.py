@@ -163,53 +163,59 @@ class Generator(BaseModel):
         return (path)
 
     def render(self, path: List[Node], all_nodes: List[str | Node]) -> None:
-        path_set: Set[Node] = set(path)
-        lines: List[str] = ['', '', '']
+            path_set: Set[Node] = set(path)
+            lines: List[str] = ['', '', '']
+            col: int = 0
 
-        for i, node in enumerate(path):
-            if (i < len(path) - 1):
-                next_node = path[i + 1]
-                dy = next_node.VALUE[1] - node.VALUE[1]
+            for i, node in enumerate(path):
+                label = f'{node.NAME}({node.DRONE_COUNT})'
 
-                for adj in node.ADJ:
-                    if (adj not in path_set):
-                        adj_dy = adj.VALUE[1] - node.VALUE[1]
-                        label = f'{adj.NAME}({adj.DRONE_COUNT})'
-                        pad = ' ' * (len(lines[1]) + len(f'{node.NAME}({node.DRONE_COUNT})'))
-                        if (adj_dy > 0):
-                            lines[2] += pad + '\\'
-                        elif (adj_dy < 0):
-                            lines[0] += pad + '/'
+                if (i < len(path) - 1):
+                    next_node = path[i + 1]
+                    dy = next_node.VALUE[1] - node.VALUE[1]
 
-                if (dy == 0):
-                    lines[1] += f'{node.NAME}({node.DRONE_COUNT}) ——— '
-                elif (dy > 0):
-                    lines[1] += f'{node.NAME}({node.DRONE_COUNT}) ——— '
-                    lines[2] += ' ' * len(f'{node.NAME}({node.DRONE_COUNT})') + '\\'
-                elif (dy < 0):
-                    lines[1] += f'{node.NAME}({node.DRONE_COUNT})'
-                    lines[0] += ' ' * len(f'{node.NAME}({node.DRONE_COUNT})') + '/'
-            else:
-                dy = node.VALUE[1] - path[-2].VALUE[1] if i > 0 else 0
-                if (dy > 0):
-                    lines[2] += ' ' + f'{node.NAME}({node.DRONE_COUNT})'
-                elif (dy < 0):
-                    lines[0] += ' ' + f'{node.NAME}({node.DRONE_COUNT})'
+                    for adj in node.ADJ:
+                        if (adj not in path_set):
+                            adj_dy = adj.VALUE[1] - node.VALUE[1]
+                            adj_label = '———>' + f'{adj.NAME}({adj.DRONE_COUNT})'
+                            pad = ' ' * (len(lines[1]) + len(f'{node.NAME}({node.DRONE_COUNT})'))
+                            if (adj_dy > 0):
+                                lines[2] = lines[2].ljust(col + len(label)) + '\\' + adj_label
+                            elif (adj_dy < 0):
+                                lines[0] = lines[0].ljust(col + len(label)) + '/' + adj_label
+
+                    if (dy == 0):
+                        lines[1] = lines[1].ljust(col) + label + '———>'
+                        col += len(label) + 3
+                    elif (dy > 0):
+                        lines[1] = lines[1].ljust(col) + label
+                        lines[2] = lines[2].ljust(col + len(label)) + '\\———>'
+                        col += len(label) + 4
+                    elif (dy < 0):
+                        lines[1] = lines[1].ljust(col) + label
+                        lines[0] = lines[0].ljust(col + len(label)) + '/———>'
+                        col += len(label) + 4
                 else:
-                    lines[1] += f'{node.NAME}({node.DRONE_COUNT})'
+                    dy = node.VALUE[1] - path[-2].VALUE[1] if i > 0 else 0
+                    if (dy > 0):
+                        lines[2] = lines[2].ljust(col) + label
+                    elif (dy < 0):
+                        lines[0] = lines[0].ljust(col) + label
+                    else:
+                        lines[1] = lines[1].ljust(col) + label
 
-        if (self.frame_lines > 0):
-            stdout.write(f'\x1b[{self.frame_lines}A')
-            stdout.write('\x1b[J')
-            stdout.flush()
+            if (self.frame_lines > 0):
+                stdout.write(f'\x1b[{self.frame_lines}A')
+                stdout.write('\x1b[J')
+                stdout.flush()
 
-        printed = 0
-        for line in lines:
-            if line.strip():
-                print(line)
-                printed += 1
-        self.frame_lines = printed
-        sleep(0.4)
+            printed = 0
+            for line in lines:
+                if line.strip():
+                    print(line)
+                    printed += 1
+            self.frame_lines = printed
+            sleep(1)
 
     def solve(self, path: List[Node], all_nodes: dict[str, Node]) -> None:
         start = datetime.now()
@@ -242,18 +248,18 @@ class Generator(BaseModel):
                             f' -> {plus.NAME} ({plus.DRONE_COUNT})'
                             )
             turn += 1
+        end = datetime.now()
+        elapsed = (end - start).total_seconds() * 1000
+        self.logger.log(f'# DONE: {max_count} drones traveled to goal')
+        self.logger.log(f'# TURN COUNT: {turn} turns in {elapsed:.3f}ms')
         print('')
-        if (self.frame_lines > 0):
-            stdout.write(f'\x1b[{self.frame_lines + 1}A')
+        if self.frame_lines > 0:
+            stdout.write(f'\x1b[{self.frame_lines}A')
             stdout.write('\x1b[J')
             stdout.flush()
         self.render(path, all_nodes)
         self.frame_lines = 1
-        end = datetime.now()
-        elapsed = (end - start).total_seconds() * 1000
-        print('')
-        self.logger.log(f'# DONE: {max_count} drones traveled to goal')
-        self.logger.log(f'# TURN COUNT: {turn} turns in {elapsed:.3f}ms')
+        sleep(0.4)
 
 
 class Parser(BaseModel):
