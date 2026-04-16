@@ -163,92 +163,6 @@ class Generator(BaseModel):
         self.logger.log(f'# PATH COST: {dist.get(goal, -1)}')
         return (path)
 
-    def render(self, all_nodes: dict[str, Node]) -> None:
-        import re
-
-        def strip_ansi(text: str) -> str:
-            return re.sub(r'\033\[[0-9;]*m', '', text)
-
-        max_x = max(n.VALUE[0] for n in all_nodes.values())
-        max_y = max(n.VALUE[1] for n in all_nodes.values())
-
-        cell_w: int = 16
-        canvas_h: int = (max_y + 1) * 3
-        canvas_w: int = (max_x + 1) * cell_w
-        canvas: List[List[str]] = [[' '] * canvas_w for _ in range(canvas_h)]
-
-        def place(text: str, row: int, col: int) -> None:
-            clean = strip_ansi(text)
-            chunks = re.split(r'(\033\[[0-9;]*m)', text)
-            ci: int = col
-            current_code: str = ''
-            for chunk in chunks:
-                if (re.match(r'\033\[[0-9;]*m', chunk)):
-                    current_code += chunk
-                else:
-                    for ch in chunk:
-                        if 0 <= row < len(canvas) and 0 <= ci < canvas_w:
-                            canvas[row][ci] = current_code + ch
-                            current_code = ''
-                        ci += 1
-
-        for node in all_nodes.values():
-            x, y = node.VALUE
-            cx: int = x * cell_w
-            cy: int = y * 3
-            label: str = f'{node.NAME}({node.DRONE_COUNT})'
-            label_len: int = len(strip_ansi(label))
-            place(label, cy, cx)
-
-            for adj in node.ADJ:
-                if (adj.VALUE <= node.VALUE):
-                    continue
-                ax, ay = adj.VALUE
-                dy = ay - y
-                dx = ax - x
-
-                if (dx < 0) or (dx == 0 and dy < 0):
-                    continue
-
-                if (dx == 0 and dy == 0):
-                    continue
-
-                if (dy == 0):
-                    adj_label_len: int = len(strip_ansi(f'{adj.NAME}({adj.DRONE_COUNT})'))
-                    arrow_len: int = cell_w * dx - label_len
-                    arrow = '|' + '—' * (arrow_len)
-                    place(arrow, cy, cx + label_len)
-
-                elif (dy > 0 and dx == 0):
-                    for step in range(1, dy * 3):
-                        place('│', cy + step, cx + label_len // 2)
-                    place('v', cy + dy * 3, cx + label_len // 2)
-
-                elif (dy > 0 and dx > 0):
-                    for step in range(1, dy * 3):
-                        place('╲', cy + step, cx + label_len + step)
-
-                elif (dy < 0 and dx > 0):
-                    for step in range(1, abs(dy) * 3):
-                        place('╱', cy - step, cx + label_len + step)
-
-        lines: List[str] = []
-        for row in canvas:
-            line = ''.join(row).rstrip()
-            lines.append(line)
-
-        while (lines and not lines[-1].strip()):
-            lines.pop()
-
-        if (self.frame_lines > 0):
-            stdout.write(f'\x1b[{self.frame_lines}A')
-            stdout.write('\x1b[J')
-            stdout.flush()
-
-        for line in lines:
-            print(line + Colors().RESET)
-        self.frame_lines = len(lines)
-
     def solve(self, path: List[Node], all_nodes: dict[str, Node]) -> None:
         start = datetime.now()
         max_count: int = path[0].DRONE_COUNT
@@ -281,7 +195,6 @@ class Generator(BaseModel):
                             f' -> {plus.NAME} ({plus.DRONE_COUNT})'
                             )
             turn += 1
-            states.append({n: n.DRONE_COUNT for n in all_nodes.values()})
         end = datetime.now()
         elapsed = (end - start).total_seconds() * 1000
         self.logger.log(f'# DONE: {max_count} drones traveled to goal')
