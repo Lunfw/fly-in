@@ -2,9 +2,7 @@ from src.colors import Colors, Format
 from pydantic import BaseModel, Field, model_validator
 from typing import List, Set, Self, Any
 from datetime import datetime
-from time import sleep
 from sys import stderr, stdout
-from re import sub
 
 
 class MetaData(BaseModel):
@@ -23,12 +21,11 @@ class MetaData(BaseModel):
             Format().putstr(
                     Format().colored('# INVALID ZONE', 'RED'),
                     stderr)
-            self.ZONE = 'normal'
+            self.ZONE = 'NORMAL'
         return (self)
 
     @model_validator(mode='after')
     def validate_color(self) -> Self:
-        self.COLOR = self.COLOR
         valid_colors: List[str] = Colors().get_colors()
         if (self.COLOR not in valid_colors):
             Format().putstr(
@@ -49,9 +46,9 @@ class MetaData(BaseModel):
 
 class Node(BaseModel):
     NAME: str = Field(default='')
-    ADJ: (List[Self]) = Field(default=[])
+    ADJ: List[Self] = Field(default=[])
     MAX_LINK: dict[tuple[int, int], int] = Field(default={})
-    VALUE: tuple[int, int] = Field(default=((0, 0)))
+    VALUE: tuple[int, int] = Field(default=(0, 0))
     DRONE_COUNT: int = Field(default=0)
     META: MetaData = Field(default=MetaData())
 
@@ -70,7 +67,7 @@ class Node(BaseModel):
 
     @model_validator(mode='after')
     def validate_self(self) -> Self:
-        if (self.VALUE[0] < 0 or self.VALUE[0] < 0):
+        if (self.VALUE[0] < 0 or self.VALUE[1] < 0):
             Format().putstr(
                     Format().colored('\n# INVALID NODE', 'RED'),
                     stderr)
@@ -80,7 +77,6 @@ class Node(BaseModel):
 
 class Logger(BaseModel):
     logs: List[str] = Field(default_factory=list)
-    form: Format = Field(default=Format())
 
     def log(self, message: str) -> None:
         timestamp: str = datetime.now().strftime('%H:%M:%S')
@@ -91,7 +87,7 @@ class Logger(BaseModel):
 
 class Generator(BaseModel):
     visited: Set[Node] = Field(default_factory=set)
-    logger: Logger = Field(default=Logger())
+    logger: Logger = Field(default_factory=Logger)
     frame_lines: int = Field(default=0)
 
     def reset(self) -> None:
@@ -118,109 +114,33 @@ class Generator(BaseModel):
                 extension = '│   '
             self.dfs(child, prefix + extension, is_last_child)
 
-    def dij(self, start: Node, goal: Node) -> List[Node]:
-        from heapq import heappop, heappush
-
-        PRIORITIES: dict[str, int | None] = {
-                'NORMAL': 1,
-                'BLOCKED': None,
-                'RESTRICTED': 2,
-                'PRIORITY': 0,
-                }
-        dist: dict[Node, int] = {start: 0}
-        parent: dict[Node, Node | None] = {start: None}
-        heap: List[tuple[int, int, Node]] = [(0, id(start), start)]
-
-        while (heap):
-            c, _, node = heappop(heap)
-            self.logger.log(f'# VISITING: {node.NAME} at {node.VALUE} ({c})')
-
-            if (node == goal):
-                break
- 
-            for adj in node.ADJ:
-                zone_cost = PRIORITIES.get(adj.META.ZONE)
-                if (zone_cost is None):
-                    continue
-                new_cost = c + zone_cost
-                if (adj not in dist or new_cost < dist[adj]):
-                    dist[adj] = new_cost
-                    parent[adj] = node
-                    self.logger.log(f'# QUEUED: {adj.NAME}')
-                    heappush(heap, (new_cost, id(adj), adj))
-
-        path: List[Node] = []
-        current: Node | None = goal
-        while (current is not None):
-            path.append(current)
-            current = parent.get(current)
-        path.reverse()
-
-        if (not path or path[0] != start):
-            Format().putstr(Format().colored('\n# NO PATH', 'RED'), stderr)
-            return []
-
-        self.logger.log(f'# PATH COST: {dist.get(goal, -1)}')
-        return (path)
-
-    def solve(self, path: List[Node], all_nodes: dict[str, Node]) -> None:
-        start = datetime.now()
-        max_count: int = path[0].DRONE_COUNT
-        self.logger.log('# TRAVELING...')
-        turn: int = 0
-        frames: List[tuple[List[str]]] = []
-        states: List[dict[Node, int]] = []
-        while (path[-1].DRONE_COUNT != max_count):
-            snapshot: List[int] = [node.DRONE_COUNT for node in path]
-            for i in range(len(path) - 1, 0, -1):
-                current: Node = path[i - 1]
-                plus: Node = path[i]
-                send: int = snapshot[i - 1]
-                receive: int = plus.META.MAX_DRONES - snapshot[i]
-
-                link_cap = current.MAX_LINK.get(plus.VALUE)
-                if (link_cap):
-                    send = min(send, link_cap)
-
-                if (current.META.ZONE == 'RESTRICTED'):
-                    turn += 1
-
-                move: int = min(send, receive)
-                if (move > 0):
-                    current.DRONE_COUNT -= move
-                    plus.DRONE_COUNT += move
-                    self.logger.log(
-                            f'# STEP: {move} of {current.NAME} '
-                            f'({current.DRONE_COUNT})'
-                            f' -> {plus.NAME} ({plus.DRONE_COUNT})'
-                            )
-            turn += 1
-        end = datetime.now()
-        elapsed = (end - start).total_seconds() * 1000
-        self.logger.log(f'# DONE: {max_count} drones traveled to goal')
-        self.logger.log(f'# TURN COUNT: {turn} turns in {elapsed:.3f}ms')
-        print('')
-        for state in states:
-            for node, count in state.items():
-                node.DRONE_COUNT = count
-            self.render(all_nodes)
-            sleep(1)
-
 
 class Parser(BaseModel):
     file: str = Field(default='')
     buffer: str = Field(default='')
     start: str = Field(default='start')
     goal: str = Field(default='goal')
-    nodes: dict[str, Node] = Field(default={})
+    nodes: dict[str, Node] = Field(default_factory=dict)
     nb_drones: int = Field(default=0)
-    generator: Generator = Field(default=Generator())
+    generator: Generator = Field(default_factory=Generator)
+    edges: dict[frozenset, int] = Field(default_factory=dict)
+
+    model_config = {'arbitrary_types_allowed': True}
+
+    def reset(self) -> None:
+        self.nodes = {}
+        self.edges = {}
+        self.start = 'start'
+        self.goal = 'goal'
+        self.nb_drones = 0
+        self.buffer = ''
+        self.file = ''
+        self.generator.reset()
 
     def receive(self, filename: str, code: str = 'dfs') -> None:
         with open(filename, 'r') as f:
             self.buffer = f.read()
             self.file = filename
-        f.close()
         self.parser(code)
 
     def parser(self, code: str) -> None:
@@ -235,13 +155,10 @@ class Parser(BaseModel):
                     self.nb_drones = int(part[0])
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
                     meta: MetaData = MetaData()
-                    if (key != 'connection' and len(part[3]) > 3):
-                        metadata: Any[str] = '='.join(part[3:]).strip('[]')
+                    if (key != 'connection' and len(part) > 3 and len(part[3]) > 3):
+                        metadata: Any = '='.join(part[3:]).strip('[]')
                         metadata = metadata.split('=')
-                        tup: tuple[str, str, str] = ('color',
-                                                     'zone',
-                                                     'max_drones',
-                                                     )
+                        tup: tuple[str, str, str] = ('color', 'zone', 'max_drones')
                         for i in range(len(metadata)):
                             if (metadata[i] in tup):
                                 if (metadata[i + 1].isdigit()):
@@ -250,8 +167,7 @@ class Parser(BaseModel):
                                     metadata[i + 1] = metadata[i + 1].upper()
                                 setattr(meta,
                                         metadata[i].upper(),
-                                        metadata[i + 1]
-                                        )
+                                        metadata[i + 1])
                         if (not meta.MAX_DRONES):
                             meta.MAX_DRONES = self.nb_drones
                     if (key != 'connection'):
@@ -260,8 +176,10 @@ class Parser(BaseModel):
                             meta.MAX_DRONES = self.nb_drones
                         node: Node = Node(VALUE=coords, META=meta)
                         self.nodes[part[0]] = node
-                        node.NAME = Format().colored(part[0].upper(),
-                                                     node.META.COLOR)
+                        if (meta.COLOR == 'RAINBOW'):
+                            node.NAME = Colors().RAINBOW(part[0].upper())
+                        else:
+                            node.NAME = Format().colored(part[0].upper(), meta.COLOR)
                     if (key == 'start_hub'):
                         self.start = part[0]
                     elif (key == 'end_hub'):
@@ -270,9 +188,11 @@ class Parser(BaseModel):
                         a, b = value.split('-')
                         capacity: int = 0
                         if (' ' in b):
-                            tmp: Any
                             b, tmp = b.split(' ', 1)
                             capacity = int(tmp.strip('[]').split('=')[1])
+                        b = b.strip()
+                        k = frozenset({a, b})
+                        self.edges[k] = capacity if capacity else 999
                         self.nodes[a].connect(self.nodes[b], capacity)
                         self.nodes[b].connect(self.nodes[a], capacity)
             except IndexError:
@@ -283,20 +203,24 @@ class Parser(BaseModel):
             Format().putstr('\n# MAPPED')
             self.generator.dfs(self.nodes[self.start])
         else:
+            from src.graph import Graph
+            from src.planner import Planner, ReservationTable
             Format().putstr('\n# SOLVED')
-            path = self.generator.dij(self.nodes[self.start],
-                                      self.nodes[self.goal]
-                                      )
-            if (not len(path)):
-                return
-            path[0].DRONE_COUNT = self.nb_drones
-            print('\n# PATH:', end='\n│ ')
-            for j in path:
-                print(j.NAME, end='')
-                if (j != path[-1]):
-                    print(' -> ', end='')
-            Format().putstr('')
-            if (path):
-                self.generator.solve(path, self.nodes)
-        self.generator.reset()
-        self.nodes = {}
+            graph = Graph()
+            graph.build(self.nodes, self.edges, self.start, self.goal)
+            res = ReservationTable(graph)
+            planner = Planner(graph, res, self.generator.logger)
+            max_turn: int = 0
+            for i in range(self.nb_drones):
+                transitions = planner.find_path(self.start, start_turn=0)
+                if (transitions is None):
+                    self.generator.logger.log(f'# DRONE {i + 1}: NO PATH FOUND')
+                    continue
+                planner.commit(transitions)
+                events = planner.to_events(transitions, self.start, 0)
+                planner.log_events(events, i + 1, self.nodes)
+                arrival = max(t for t, _, _ in events)
+                max_turn = max(max_turn, arrival)
+                self.generator.logger.log(f'# DRONE {i + 1}: arrived at turn {arrival}')
+            self.generator.logger.log(f'# MAX TURN: {max_turn}')
+        self.reset()
