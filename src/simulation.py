@@ -15,6 +15,7 @@ class SimulationDisplay(BaseModel):
     nav_lines: int = Field(default=0)
     options: List[str] = Field(default=['Open', 'Generate', 'Close'])
     generator: Parser = Field(default=Parser())
+    popped: int = Field(default=0)
 
     def prompt(self, filename: str) -> None:
         selected: int = 0
@@ -37,6 +38,7 @@ class SimulationDisplay(BaseModel):
             elif (self.options[selected] == 'Generate' and key == '\r'):
                 self.options.pop(selected)
                 self.first_draw = True
+                self.popped -= 1
                 self.options.append('View in Real Time')
                 self.generator.receive(f'maps/{filename}')
                 selected = 0
@@ -44,6 +46,7 @@ class SimulationDisplay(BaseModel):
                   key == '\r'):
                 self.options.pop(selected)
                 self.nav_lines -= 8
+                self.popped += 1
                 self.generator.receive(f'maps/{filename}', 'bfs')
                 selected = 0
             elif (self.options[selected] == 'Close' and key == '\r'):
@@ -108,4 +111,4 @@ class SimulationDisplay(BaseModel):
                 break
             elif (key == '\x03'):
                 exit(0)
-        self.nav_lines = lines + 8
+        self.nav_lines = lines + 8 - self.popped
