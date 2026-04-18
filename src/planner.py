@@ -171,7 +171,9 @@ class Planner:
                 assert isinstance(data, str)
                 name = Format().colored(data.upper(),
                                         raw_nodes[data].META.COLOR)
-                self.logger.log(f'# DRONE {drone_id}: at {name} (turn {t})')
+                self.logger.log(
+                        f'# DRONE {drone_id}: at {name} (turn {t})'
+                        )
             elif (kind == 'transit'):
                 assert isinstance(data, tuple)
                 a, b = data[0], data[1]
