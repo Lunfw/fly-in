@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Dict, List
+from typing import Dict, List, Any
 
 
 class NodeInfo(BaseModel):
@@ -13,14 +13,15 @@ class EdgeInfo(BaseModel):
 
 class Graph(BaseModel):
     nodes: Dict[str, NodeInfo] = Field(default_factory=dict)
-    edges: Dict[frozenset, EdgeInfo] = Field(default_factory=dict)
+    edges: Dict[frozenset[str], EdgeInfo] = Field(default_factory=dict)
     start: str = Field(default='')
     end: str = Field(default='')
     adj: Dict[str, List[str]] = Field(default_factory=dict)
 
     model_config = {'arbitrary_types_allowed': True}
 
-    def build(self, raw_nodes: dict, raw_edges: dict,
+    def build(self, raw_nodes: Dict[str, Any],
+              raw_edges: Dict[frozenset[str], int],
               start: str, end: str) -> None:
         self.start = start
         self.end = end

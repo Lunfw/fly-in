@@ -1,10 +1,10 @@
 import heapq
-from typing import Dict, FrozenSet, List, Optional, Tuple
+from typing import Dict, FrozenSet, List, Optional, Tuple, Union, Any
 from src.graph import Graph
 
 State = Tuple[str, int]
 Transition = Tuple[State, State, Optional[Tuple[str, str]]]
-Event = Tuple[int, str, object]
+Event = Tuple[int, str, Union[str, Tuple[str, str]]]
 
 
 class ReservationTable:
@@ -35,7 +35,10 @@ class ReservationTable:
 class Planner:
     MAX_TURN = 500
 
-    def __init__(self, graph: Graph, reservations: ReservationTable, logger) -> None:
+    def __init__(self,
+                 graph: Graph,
+                 reservations: ReservationTable,
+                 logger: Any) -> None:
         self.g = graph
         self.res = reservations
         self.logger = logger
@@ -59,7 +62,9 @@ class Planner:
     def _heuristic(self, node: str) -> int:
         return self._h.get(node, 10 ** 6)
 
-    def find_path(self, start: str, start_turn: int = 0) -> Optional[List[Transition]]:
+    def find_path(self,
+                  start: str,
+                  start_turn: int = 0) -> Optional[List[Transition]]:
         goal = self.g.end
         open_heap: List[Tuple[int, int, State]] = []
         counter = 0
@@ -75,8 +80,14 @@ class Planner:
                 return self._rebuild(cur, came_from)
             if (turn >= self.MAX_TURN):
                 continue
-            if (self.g.is_unlimited(node) or not self.res.node_full(node, turn + 1)):
-                self._relax(cur, (node, turn + 1), None, 1, g_score, came_from, open_heap)
+            if (self.g.is_unlimited(node)
+                    or not self.res.node_full(node, turn + 1)):
+                self._relax(cur, (node,
+                                  turn + 1),
+                            None,
+                            1,
+                            g_score,
+                            came_from, open_heap)
                 counter += 1
             for nb in self.g.neighbors(node):
                 if (self.g.is_blocked(nb)):
@@ -109,7 +120,8 @@ class Planner:
         heapq.heappush(open_heap, (f, len(open_heap), nxt))
 
     def _rebuild(self, goal_state: State,
-                 came_from: Dict[State, Tuple[State, Optional[Tuple[str, str]]]],
+                 came_from: Dict[State, Tuple[State,
+                                              Optional[Tuple[str, str]]]],
                  ) -> List[Transition]:
         transitions: List[Transition] = []
         cur = goal_state
@@ -149,14 +161,22 @@ class Planner:
                 events.append((t2, 'at', v))
         return events
 
-    def log_events(self, events: List[Event], drone_id: int, raw_nodes: dict) -> None:
+    def log_events(self,
+                   events: List[Event],
+                   drone_id: int,
+                   raw_nodes: Dict[str, Any]) -> None:
         from src.colors import Format
         for t, kind, data in sorted(events, key=lambda e: e[0]):
             if (kind == 'at'):
-                name = Format().colored(data.upper(), raw_nodes[data].META.COLOR)
+                assert isinstance(data, str)
+                name = Format().colored(data.upper(),
+                                        raw_nodes[data].META.COLOR)
                 self.logger.log(f'# DRONE {drone_id}: at {name} (turn {t})')
             elif (kind == 'transit'):
-                a, b = data
+                assert isinstance(data, tuple)
+                a, b = data[0], data[1]
                 na = Format().colored(a.upper(), raw_nodes[a].META.COLOR)
                 nb = Format().colored(b.upper(), raw_nodes[b].META.COLOR)
-                self.logger.log(f'# DRONE {drone_id}: {na} -> {nb} (turn {t})')
+                self.logger.log(
+                        f'# DRONE {drone_id}: {na} -> {nb} (turn {t})'
+                        )

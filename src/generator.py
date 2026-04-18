@@ -45,7 +45,7 @@ class MetaData(BaseModel):
 
 
 class Node(BaseModel):
-    NAME: str = Field(default='')
+    NAME: (str | List[str]) = Field(default='')
     ADJ: List[Self] = Field(default=[])
     MAX_LINK: dict[tuple[int, int], int] = Field(default={})
     VALUE: tuple[int, int] = Field(default=(0, 0))
@@ -114,7 +114,7 @@ class Parser(BaseModel):
     nodes: dict[str, Node] = Field(default_factory=dict)
     nb_drones: int = Field(default=0)
     generator: Generator = Field(default_factory=Generator)
-    edges: dict[frozenset, int] = Field(default_factory=dict)
+    edges: dict[frozenset[str], int] = Field(default_factory=dict)
 
     model_config = {'arbitrary_types_allowed': True}
 
