@@ -2,7 +2,7 @@ from src.colors import Colors, Format
 from pydantic import BaseModel, Field, model_validator
 from typing import List, Set, Self, Any
 from datetime import datetime
-from sys import stderr, stdout
+from sys import stderr
 
 
 class MetaData(BaseModel):
@@ -64,15 +64,6 @@ class Node(BaseModel):
         self.ADJ.append(other)
         if (capacity):
             self.MAX_LINK[other.VALUE] = capacity
-
-    @model_validator(mode='after')
-    def validate_self(self) -> Self:
-        if (self.VALUE[0] < 0 or self.VALUE[1] < 0):
-            Format().putstr(
-                    Format().colored('\n# INVALID NODE', 'RED'),
-                    stderr)
-            self.VALUE = (0, 0)
-        return (self)
 
 
 class Logger(BaseModel):
@@ -155,10 +146,14 @@ class Parser(BaseModel):
                     self.nb_drones = int(part[0])
                 elif (key in ('start_hub', 'end_hub', 'hub', 'connection')):
                     meta: MetaData = MetaData()
-                    if (key != 'connection' and len(part) > 3 and len(part[3]) > 3):
+                    if (key != 'connection'
+                        and len(part) > 3
+                            and len(part[3]) > 3):
                         metadata: Any = '='.join(part[3:]).strip('[]')
                         metadata = metadata.split('=')
-                        tup: tuple[str, str, str] = ('color', 'zone', 'max_drones')
+                        tup: tuple[str, str, str] = ('color',
+                                                     'zone',
+                                                     'max_drones')
                         for i in range(len(metadata)):
                             if (metadata[i] in tup):
                                 if (metadata[i + 1].isdigit()):
@@ -179,7 +174,8 @@ class Parser(BaseModel):
                         if (meta.COLOR == 'RAINBOW'):
                             node.NAME = Colors().RAINBOW(part[0].upper())
                         else:
-                            node.NAME = Format().colored(part[0].upper(), meta.COLOR)
+                            node.NAME = Format().colored(part[0].upper(),
+                                                         meta.COLOR)
                     if (key == 'start_hub'):
                         self.start = part[0]
                     elif (key == 'end_hub'):
@@ -214,13 +210,15 @@ class Parser(BaseModel):
             for i in range(self.nb_drones):
                 transitions = planner.find_path(self.start, start_turn=0)
                 if (transitions is None):
-                    self.generator.logger.log(f'# DRONE {i + 1}: NO PATH FOUND')
+                    self.generator.logger.log(
+                            f'# DRONE {i + 1}: NO PATH FOUND')
                     continue
                 planner.commit(transitions)
                 events = planner.to_events(transitions, self.start, 0)
                 planner.log_events(events, i + 1, self.nodes)
                 arrival = max(t for t, _, _ in events)
                 max_turn = max(max_turn, arrival)
-                self.generator.logger.log(f'# DRONE {i + 1}: arrived at turn {arrival}')
+                self.generator.logger.log(Format().colored(
+                    f'# DRONE {i + 1} -> DONE!!', 'GOLD'))
             self.generator.logger.log(f'# MAX TURN: {max_turn}')
         self.reset()

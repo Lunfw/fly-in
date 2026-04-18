@@ -128,7 +128,3 @@ class Format(BaseModel):
             margin += '='
         margin += ' >|' + '\033[0m'
         self.centered(margin)
-
-    @staticmethod
-    def strip_ansi(text: str) -> int:
-        return (len(re.sub(r'\033[[^m]*m', '', text)))
