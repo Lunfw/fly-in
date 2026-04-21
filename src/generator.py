@@ -115,6 +115,7 @@ class Parser(BaseModel):
     nb_drones: int = Field(default=0)
     generator: Generator = Field(default_factory=Generator)
     edges: dict[frozenset[str], int] = Field(default_factory=dict)
+    logged: List[str] = Field(default_factory=list)
 
     model_config = {'arbitrary_types_allowed': True}
 
@@ -124,8 +125,7 @@ class Parser(BaseModel):
         self.start = 'start'
         self.goal = 'goal'
         self.nb_drones = 0
-        self.buffer = ''
-        self.file = ''
+        self.logged = []
         self.generator.reset()
 
     def receive(self, filename: str, code: str = 'dfs') -> None:
@@ -135,6 +135,7 @@ class Parser(BaseModel):
         self.parser(code)
 
     def parser(self, code: str) -> None:
+        self.reset()
         for line in self.buffer.split('\n'):
             line = line.strip()
             if (not line or line.startswith('#') or ': ' not in line):
@@ -195,12 +196,13 @@ class Parser(BaseModel):
                 Format().putstr(
                         Format().colored('\n# INVALID PARAM', 'RED'),
                         stderr)
+        from src.graph import Graph
+        from src.planner import Planner, ReservationTable
+        planner = Planner(Graph(), ReservationTable(Graph()), None)
         if (code == 'dfs'):
             Format().putstr('\n# MAPPED')
             self.generator.dfs(self.nodes[self.start])
         else:
-            from src.graph import Graph
-            from src.planner import Planner, ReservationTable
             Format().putstr('\n# SOLVED')
             graph = Graph()
             graph.build(self.nodes, self.edges, self.start, self.goal)
@@ -218,7 +220,7 @@ class Parser(BaseModel):
                 planner.log_events(events, i + 1, self.nodes)
                 arrival = max(t for t, _, _ in events)
                 max_turn = max(max_turn, arrival)
-                self.generator.logger.log(Format().colored(
+                planner.logger.log(Format().colored(
                     f'# DRONE {i + 1} -> DONE!!', 'GOLD'))
-            self.generator.logger.log(f'# MAX TURN: {max_turn}')
-        self.reset()
+            planner.logger.log(f'# MAX TURN: {max_turn}')
+            self.logged = planner.logger.logs

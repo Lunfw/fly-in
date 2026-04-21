@@ -73,5 +73,6 @@ clean:
 	find . -name "*.pyo" -exec rm -f {} \; 2>/dev/null || true
 	find . -type d -name "__pycache__" -exec rm -rf {} \; 2>/dev/null || true
 	@find . -type d -name ".mypy_cache" -exec rm -rf {} \; 2>/dev/null || true
+	@if [ -d 'logs' ]; then rm -rf logs; fi
 
 .PHONY: help run install clean lint lint-strict

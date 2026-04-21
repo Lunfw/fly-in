@@ -49,6 +49,13 @@ class SimulationDisplay(BaseModel):
                 self.popped += 1
                 self.generator.receive(f'maps/{filename}', 'bfs')
                 selected = 0
+                self.options.append('Save to logs/_log.txt')
+            elif (self.options[selected] == 'Save to logs/_log.txt' and
+                  key == '\r'):
+                self.options.pop(selected)
+                self.popped += 1
+                selected -= 1
+                self.save_to_file(self.generator.file)
             elif (self.options[selected] == 'Close' and key == '\r'):
                 self.options = ['Open', 'Generate', 'Close']
                 self.first_draw = True
@@ -96,6 +103,31 @@ class SimulationDisplay(BaseModel):
         self.form.putstr(temp)
 
         self.nav_lines = len(temp) + 2
+
+    def save_to_file(self, map_name: str) -> None:
+        from os import listdir, path, makedirs
+        makedirs('logs', exist_ok=True)
+        sn = map_name.split('/')
+        prefix = sn[1] + '_' + sn[2][:-4]
+        suffix = '.log.txt'
+
+        def get_last_file_no() -> int:
+            matches = []
+            for fname in listdir('logs'):
+                if (fname.startswith(prefix) and fname.endswith(suffix)):
+                    no = fname[len(prefix):-len(suffix)]
+                    if (no.isdigit()):
+                        matches.append(int(no))
+            return (max(matches) if matches else 0)
+
+        latest_no = get_last_file_no() + 1
+        name = f'{prefix}{latest_no}{suffix}'
+        log_path = path.join('logs', f'{name}')
+        with open(log_path, 'w') as f:
+            print(Format().colored(f'\n#    {name}\n', 'WHITE'), file=f)
+            for i in self.generator.logged:
+                print(i, file=f)
+        f.close()
 
     def get_content(self, filename: str) -> None:
         with open(filename, 'r') as file:
