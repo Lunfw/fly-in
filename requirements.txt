@@ -1,4 +1,4 @@
-flake8 >= 7.1.1
-mypy >= 1.15.0
-pydantic >= 2.12.5
-pudb >= 2025.1.5
+flake8
+mypy
+pydantic
+pudb

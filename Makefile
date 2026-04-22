@@ -13,6 +13,7 @@ RESET	= \033[0m
 install:
 	@if [ ! -d $(VENV) ]; then \
 		$(PY) -m venv $(VENV); \
+		$(VENV)/bin/pip freeze; \
 		$(VENV)/bin/pip install -r requirements.txt -q; \
 		chmod +x $(VENV)/bin/activate; \
 	else \
